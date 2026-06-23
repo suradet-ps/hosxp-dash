@@ -1,4 +1,4 @@
-# HOSxP Drug Dashboard
+# HOSxp Dash
 
 [![Tauri](https://img.shields.io/badge/Tauri-2.10.1-24c8db?logo=tauri&logoColor=fff)](https://tauri.app/)
 [![Vue.js](https://img.shields.io/badge/Vue-3.5.32-4FC08D?logo=vue.js&logoColor=fff)](https://vuejs.org/)
@@ -40,8 +40,8 @@ Please make sure you have the following installed to run and build the project:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/suradet-ps/hosxp-drug-dashboard.git
-   cd hosxp-drug-dashboard
+   git clone https://github.com/suradet-ps/hosxp-dash.git
+   cd hosxp-dash
    ```
 
 2. **Install dependencies:**

@@ -3,9 +3,9 @@
     <!-- Header -->
     <header class="app-header">
         <div class="header-brand">
-            <img class="brand-icon" :src="logoUrl" alt="HosXP Drug Dashboard Logo" />
+            <img class="brand-icon" :src="logoUrl" alt="HOSxp Dash Logo" />
             <div class="brand-text">
-                <span class="brand-title">HosXP Drug Dashboard</span>
+                <span class="brand-title">HOSxp Dash</span>
                 <span class="brand-sub">โรงพยาบาลสระโบสถ์</span>
             </div>
         </div>

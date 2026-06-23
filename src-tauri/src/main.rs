@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  hosxp_drug_dashboard_lib::run();
+  hosxp_dash_lib::run();
 }

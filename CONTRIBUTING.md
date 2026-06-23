@@ -1,6 +1,6 @@
-# Contributing to HOSxP Drug Dashboard
+# Contributing to HOSxp Dash
 
-First of all, thank you for considering contributing to the **HOSxP Drug Dashboard**! We welcome all contributions, big or small, from developers of all skill levels.
+First of all, thank you for considering contributing to the **HOSxp Dash**! We welcome all contributions, big or small, from developers of all skill levels.
 
 ## How to Contribute
 
@@ -12,12 +12,12 @@ There are several ways you can contribute to this project:
 
 ## Development Workflow
 
-1. **Fork the Repository:** Start by forking the [main repository](https://github.com/suradet-ps/hosxp-drug-dashboard).
+1. **Fork the Repository:** Start by forking the [main repository](https://github.com/suradet-ps/hosxp-dash).
 2. **Clone your Fork:**
 
    ```bash
-   git clone https://github.com/suradet-ps/hosxp-drug-dashboard.git
-   cd hosxp-drug-dashboard
+   git clone https://github.com/suradet-ps/hosxp-dash.git
+   cd hosxp-dash
    ```
 
 3. **Create a Branch:** Create a dedicated branch for your work.
@@ -53,4 +53,4 @@ There are several ways you can contribute to this project:
 
 As contributors and maintainers of this project, we pledge to respect all people who contribute. Please be kind, be respectful of others, and focus on providing constructive feedback.
 
-Thank you for helping us make the HOSxP Drug Dashboard better for everyone!
+Thank you for helping us make the HOSxp Dash better for everyone!

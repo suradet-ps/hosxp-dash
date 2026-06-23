@@ -41,7 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'HosXP Drug Dashboard ${{ github.ref_name }}'
+          releaseName: 'HOSxp Dash ${{ github.ref_name }}'
           releaseBody: 'ดาวน์โหลดไฟล์ตัวติดตั้ง .msi และ .exe สำหรับ Windows ได้ที่ Assets ด้านล่าง'
           releaseDraft: false
           prerelease: false

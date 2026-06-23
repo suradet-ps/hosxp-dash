@@ -1,7 +1,7 @@
 {
-  "productName": "HosXP Drug Dashboard",
+  "productName": "HOSxp Dash",
   "version": "0.1.0",
-  "identifier": "th.go.sarabotthos.hosxp-drug-dashboard",
+  "identifier": "th.go.sarabotthos.hosxp-dash",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "HosXP Drug Dashboard",
+        "title": "HOSxp Dash",
         "width": 1440,
         "height": 900,
         "minWidth": 1024,

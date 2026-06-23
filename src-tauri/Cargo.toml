@@ -1,11 +1,11 @@
 [package]
-name = "hosxp-drug-dashboard"
+name = "hosxp-dash"
 version = "0.1.0"
 edition = "2024"
-description = "HosXP drug-dispensing dashboard — Tauri backend (MySQL queries, caching, IPC commands)"
+description = "HOSxp Dash — Tauri backend (MySQL queries, caching, IPC commands)"
 
 [lib]
-name = "hosxp_drug_dashboard_lib"
+name = "hosxp_dash_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

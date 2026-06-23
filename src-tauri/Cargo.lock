@@ -1465,7 +1465,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hosxp-drug-dashboard"
+name = "hosxp-dash"
 version = "0.1.0"
 dependencies = [
  "serde",
