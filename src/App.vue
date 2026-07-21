@@ -142,7 +142,7 @@ watch(
 )
 
 onMounted(async () => {
-    await dbStore.initFromStorage()
+    await dbStore.initFromDisk()
     if (dbStore.connected) {
         await loadDashboard()
         if (dashStore.selectedIcode) await loadDrugChart()

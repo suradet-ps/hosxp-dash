@@ -10,8 +10,6 @@ export interface DbConfig {
   database: string
 }
 
-const STORAGE_KEY = 'hosxp_db_config'
-
 export const useDbConfigStore = defineStore('dbConfig', () => {
   const host = ref('localhost')
   const port = ref(3306)
@@ -30,22 +28,23 @@ export const useDbConfigStore = defineStore('dbConfig', () => {
     database: database.value,
   }))
 
-  function loadFromStorage() {
+  async function loadFromDisk() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const saved = JSON.parse(raw) as Partial<DbConfig>
-        if (saved.host) host.value = saved.host
-        if (saved.port) port.value = saved.port
-        if (saved.user) user.value = saved.user
-        if (saved.password) password.value = saved.password
-        if (saved.database) database.value = saved.database
+      const saved = await invoke<DbConfig | null>('load_config')
+      if (saved) {
+        host.value = saved.host
+        port.value = saved.port
+        user.value = saved.user
+        password.value = saved.password
+        database.value = saved.database
       }
     } catch { }
   }
 
-  function saveToStorage() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config.value))
+  async function saveToDisk() {
+    try {
+      await invoke('save_db_config', { config: config.value })
+    } catch { }
   }
 
   async function connect(cfg?: Partial<DbConfig>) {
@@ -62,7 +61,7 @@ export const useDbConfigStore = defineStore('dbConfig', () => {
     try {
       await invoke('connect_db', { config: config.value })
       connected.value = true
-      saveToStorage()
+      await saveToDisk()
     } catch (e) {
       connected.value = false
       connectionError.value = String(e)
@@ -77,8 +76,8 @@ export const useDbConfigStore = defineStore('dbConfig', () => {
   }
 
   // Auto-connect on startup if config saved
-  async function initFromStorage() {
-    loadFromStorage()
+  async function initFromDisk() {
+    await loadFromDisk()
     if (host.value && user.value) {
       try {
         await connect()
@@ -91,6 +90,6 @@ export const useDbConfigStore = defineStore('dbConfig', () => {
   return {
     host, port, user, password, database,
     connected, connecting, connectionError,
-    config, connect, disconnect, initFromStorage,
+    config, connect, disconnect, initFromDisk,
   }
 })

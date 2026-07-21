@@ -4,6 +4,7 @@
 //! frontend `invoke()` call.  Heavy query results are cached in process-wide
 //! `LazyLock<RwLock<HashMap>>` statics with a 5-minute TTL.
 
+use crate::config;
 use crate::db::{DbConfig, init_pool, with_pool};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
@@ -496,4 +497,19 @@ pub async fn get_drug_list(search: String) -> Result<Vec<DrugItem>, String> {
     })
   })
   .await
+}
+
+// ── Config commands ────────────────────────────────────────────────────────────
+
+/// Load the encrypted database config from disk.
+/// Returns `Ok(None)` on first launch (no config file yet).
+#[tauri::command]
+pub async fn load_config() -> Result<Option<DbConfig>, String> {
+  config::load_config()
+}
+
+/// Encrypt and persist the database config to disk.
+#[tauri::command]
+pub async fn save_db_config(config: DbConfig) -> Result<(), String> {
+  config::save_config(&config)
 }
