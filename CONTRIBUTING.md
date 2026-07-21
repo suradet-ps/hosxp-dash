@@ -30,7 +30,7 @@ There are several ways you can contribute to this project:
 5. **Test Your Changes:** Ensure the app compiles and your changes work as intended.
 
    ```bash
-   npm run tauri dev
+   bun run tauri dev
    ```
 
 6. **Commit:** Commit your changes with a clear, descriptive commit message.

@@ -31,7 +31,7 @@ A modern, high-performance desktop application for monitoring and visualizing dr
 
 Please make sure you have the following installed to run and build the project:
 
-- [Node.js](https://nodejs.org/) (Version 18 or above recommended)
+- [Bun](https://bun.sh/) (or [Node.js](https://nodejs.org/) Version 18 or above)
 - [Rust](https://www.rust-lang.org/) (Including Cargo)
 - Tauri dependencies for your operating system
 
@@ -47,13 +47,13 @@ Please make sure you have the following installed to run and build the project:
 2. **Install dependencies:**
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Run the application in development mode:**
 
    ```bash
-   npm run tauri dev
+   bun run tauri dev
    ```
 
 ## Building for Production
@@ -61,7 +61,7 @@ Please make sure you have the following installed to run and build the project:
 To create a standalone application executable for your platform:
 
 ```bash
-npm run tauri build
+bun run tauri build
 ```
 
 The output files will be located in the `src-tauri/target/release/bundle` directory.
