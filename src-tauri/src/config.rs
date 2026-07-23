@@ -1,10 +1,10 @@
 //! Encrypted configuration management.
 //!
 //! Stores database connection settings in an encrypted `config.json` file
-//! inside the platform-specific app data directory.  The master key is
-//! persisted separately in `.master_key` and loaded on startup.
+//! inside the platform-specific app data directory. The master key is
+//! stored in the OS keychain via `encryptman-keyring`.
 
-use encryptman::{decrypt, encrypt, generate_master_key, MasterKey};
+use encryptman_keyring::Vault;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -13,7 +13,7 @@ use crate::db::DbConfig;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/// Application name used for the app-data directory.
+/// Application name used for the keyring service and app-data directory.
 const APP_NAME: &str = "hosxp-dash";
 
 /// Returns the platform-specific app data directory.
@@ -34,27 +34,37 @@ fn config_path() -> Result<PathBuf, String> {
   Ok(app_dir()?.join("config.json"))
 }
 
-/// Returns the path to `.master_key`.
-fn key_path() -> Result<PathBuf, String> {
+/// Returns the path to legacy `.master_key` file (for migration).
+fn legacy_key_path() -> Result<PathBuf, String> {
   Ok(app_dir()?.join(".master_key"))
 }
 
-// ── Master key persistence ─────────────────────────────────────────────────────
+// ── Vault ─────────────────────────────────────────────────────────────────────
 
-/// Load the master key from disk, or generate and persist a new one.
+/// Create or load a vault backed by the OS keychain.
 ///
-/// The key file is a raw 32-byte binary file.
-fn load_or_create_master_key() -> Result<MasterKey, String> {
-  let path = key_path()?;
+/// On first run, a new master key is generated and stored in the keychain.
+/// On subsequent runs, the existing key is loaded automatically.
+fn vault() -> Result<Vault, String> {
+  Vault::new(APP_NAME).map_err(|e| format!("keychain error: {e}"))
+}
 
-  if path.exists() {
-    let bytes = fs::read(&path).map_err(|e| format!("failed to read master key: {e}"))?;
-    return MasterKey::try_from(bytes.as_slice()).map_err(|e| format!("invalid master key: {e}"));
+// ── Migration from file-based keys ────────────────────────────────────────────
+
+/// Migrate a legacy `.master_key` file into the OS keychain.
+///
+/// If a `.master_key` file exists, it is imported into the keychain and
+/// deleted on success. Returns `Ok(true)` if a migration happened.
+pub fn migrate_legacy_key() -> Result<bool, String> {
+  let path = legacy_key_path()?;
+  if !path.exists() {
+    return Ok(false);
   }
 
-  let key = generate_master_key();
-  fs::write(&path, key.as_bytes()).map_err(|e| format!("failed to write master key: {e}"))?;
-  Ok(key)
+  Vault::migrate_from_file(APP_NAME, &path)
+    .map_err(|e| format!("failed to migrate master key: {e}"))?;
+
+  Ok(true)
 }
 
 // ── Encrypted config ───────────────────────────────────────────────────────────
@@ -69,17 +79,6 @@ struct EncryptedConfigFile {
   user: String,
   password: String,
   database: String,
-}
-
-/// Encrypt a single field value.
-fn enc(key: &MasterKey, value: &str) -> Result<String, String> {
-  encrypt(key, value).map_err(|e| format!("encryption failed: {e}"))
-}
-
-/// Decrypt a single field value.
-fn dec(key: &MasterKey, value: &str) -> Result<String, String> {
-  // encryptman::encrypt uses the default context, which matches here
-  decrypt(key, value).map_err(|e| format!("decryption failed: {e}"))
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -97,16 +96,26 @@ pub fn load_config() -> Result<Option<DbConfig>, String> {
   let encrypted: EncryptedConfigFile =
     serde_json::from_slice(&raw).map_err(|e| format!("invalid config JSON: {e}"))?;
 
-  let master_key = load_or_create_master_key()?;
+  let vault = vault()?;
 
   Ok(Some(DbConfig {
-    host: dec(&master_key, &encrypted.host)?,
-    port: dec(&master_key, &encrypted.port)?
+    host: vault
+      .decrypt(&encrypted.host)
+      .map_err(|e| format!("decryption failed: {e}"))?,
+    port: vault
+      .decrypt(&encrypted.port)
+      .map_err(|e| format!("decryption failed: {e}"))?
       .parse::<u16>()
       .map_err(|e| format!("invalid port: {e}"))?,
-    user: dec(&master_key, &encrypted.user)?,
-    password: dec(&master_key, &encrypted.password)?,
-    database: dec(&master_key, &encrypted.database)?,
+    user: vault
+      .decrypt(&encrypted.user)
+      .map_err(|e| format!("decryption failed: {e}"))?,
+    password: vault
+      .decrypt(&encrypted.password)
+      .map_err(|e| format!("decryption failed: {e}"))?,
+    database: vault
+      .decrypt(&encrypted.database)
+      .map_err(|e| format!("decryption failed: {e}"))?,
   }))
 }
 
@@ -114,14 +123,24 @@ pub fn load_config() -> Result<Option<DbConfig>, String> {
 ///
 /// Creates the app data directory and master key if they don't exist yet.
 pub fn save_config(config: &DbConfig) -> Result<(), String> {
-  let master_key = load_or_create_master_key()?;
+  let vault = vault()?;
 
   let encrypted = EncryptedConfigFile {
-    host: enc(&master_key, &config.host)?,
-    port: enc(&master_key, &config.port.to_string())?,
-    user: enc(&master_key, &config.user)?,
-    password: enc(&master_key, &config.password)?,
-    database: enc(&master_key, &config.database)?,
+    host: vault
+      .encrypt(&config.host)
+      .map_err(|e| format!("encryption failed: {e}"))?,
+    port: vault
+      .encrypt(&config.port.to_string())
+      .map_err(|e| format!("encryption failed: {e}"))?,
+    user: vault
+      .encrypt(&config.user)
+      .map_err(|e| format!("encryption failed: {e}"))?,
+    password: vault
+      .encrypt(&config.password)
+      .map_err(|e| format!("encryption failed: {e}"))?,
+    database: vault
+      .encrypt(&config.database)
+      .map_err(|e| format!("encryption failed: {e}"))?,
   };
 
   let json =

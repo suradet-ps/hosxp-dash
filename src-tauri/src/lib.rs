@@ -14,6 +14,11 @@ use commands::{
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // Migrate legacy `.master_key` file to OS keychain (if exists).
+  if let Err(e) = config::migrate_legacy_key() {
+    eprintln!("Warning: failed to migrate legacy master key: {e}");
+  }
+
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
     .invoke_handler(tauri::generate_handler![
