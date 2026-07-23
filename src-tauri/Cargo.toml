@@ -16,7 +16,7 @@ tauri = { version = "2", features = [] }              # desktop app framework / 
 tauri-plugin-shell = "2"                              # exposes shell commands to the frontend
 serde = { version = "1", features = ["derive"] }      # serialization for IPC payloads
 serde_json = "1"                                      # JSON encode/decode (Tauri IPC transport)
-sqlx = { version = "0.8", features = ["mysql", "runtime-tokio", "chrono"] } # async MySQL driver
+sqlx = { version = "0.9", features = ["mysql", "runtime-tokio", "chrono"] } # async MySQL driver
 tokio = { version = "1", features = ["full"] }        # async runtime
 encryptman = "0.2"                                     # AES-256-GCM encryption for config
 encryptman-keyring = "0.1"                              # OS keychain-backed master key storage
