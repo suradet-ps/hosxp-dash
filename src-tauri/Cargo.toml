@@ -20,4 +20,4 @@ sqlx = { version = "0.9", features = ["mysql", "runtime-tokio", "chrono"] } # as
 tokio = { version = "1", features = ["full"] }        # async runtime
 encryptman = "0.2"                                     # AES-256-GCM encryption for config
 encryptman-keyring = "0.1"                              # OS keychain-backed master key storage
-dirs = "6"                                              # platform-specific app data directory
+dirs = "7"                                              # platform-specific app data directory
