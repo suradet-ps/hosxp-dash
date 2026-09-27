@@ -1,13 +1,12 @@
 # HOSxp Dash
 
-```
-██╗  ██╗ ██████╗  ██████╗██╗  ██╗██████╗ ██████╗  █████╗  ██████╗██╗  ██╗
-██║  ██║██╔═══██╗██╔════╝╚██╗██╔╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██║  ██║
-███████║██║   ██║███████╗ ╚███╔╝ ██████╔╝██║  ██║███████║███████╗███████║
-██║  ██║██║   ██║╚════██║ ███╔╝  ██╔═══╝ ██║  ██║██╔══██║╚════██║██║  ██║
-██║  ██║╚██████╔╝██████╔╝██╔██╗  ██║     ██████╔╝██║  ██║██████╔╝██║  ██║
-╚═╝  ╚═╝ ╚═════╝ ╚═════╝╚═╝ ╚═╝╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝
-```
+[![Release](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml/badge.svg)](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Rust: stable](https://img.shields.io/badge/rust-stable-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-24c8db.svg?logo=tauri&logoColor=white)](https://tauri.app/)
+[![Vue v3](https://img.shields.io/badge/Vue-v3-4FC08D.svg?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![ECharts v6](https://img.shields.io/badge/ECharts-v6-AA344D.svg?logo=apacheecharts&logoColor=white)](https://echarts.apache.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/suradet-ps/hosxp-dash/issues)
 
 ---
 
