@@ -1,5 +1,6 @@
 # HOSxP Dash
 
+[![CI](https://github.com/suradet-ps/hosxp-dash/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/hosxp-dash/actions/workflows/ci.yml)
 [![Release](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml/badge.svg)](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Rust: stable](https://img.shields.io/badge/rust-stable-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
