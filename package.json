@@ -27,7 +27,7 @@
     "@tauri-apps/cli": "^2.10.1",
     "@types/node": "^26.0.0",
     "@vitejs/plugin-vue": "^6.0.6",
-    "typescript": "^7.0.0",
+    "typescript": "npm:typescript-native-bridge@6.0.3-bridge.18.tsgo.7.0.2",
     "vite": "^8.0.8",
     "vue-tsc": "^3.2.6"
   }

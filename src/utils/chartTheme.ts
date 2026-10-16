@@ -58,7 +58,10 @@ export function valueAxis() {
 }
 
 /** Horizontal gradient used by bars growing left → right */
-export function barGradient(from = 'rgba(78,110,47,0.35)', to = chartColors.bar) {
+export function barGradient(
+  from: string = 'rgba(78,110,47,0.35)',
+  to: string = chartColors.bar
+) {
   return {
     type: 'linear' as const,
     x: 0,
