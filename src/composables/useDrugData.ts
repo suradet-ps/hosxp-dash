@@ -7,6 +7,14 @@ export interface DashboardBundle {
   top_drugs: DrugSummary[]
 }
 
+export interface AntibioticUsage {
+  icode: string
+  drug_name: string
+  units: string
+  total_qty: number
+  visit_count: number
+}
+
 export function useDrugData() {
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -52,5 +60,23 @@ export function useDrugData() {
     return (await run(() => invoke<DrugItem[]>('get_drug_list', { search: query }))) ?? []
   }
 
-  return { loading, error, fetchDashboardData, fetchTopDrugs, fetchDrugMonthly, fetchAvailableYears, searchDrugs }
+  /** Injectable-antibiotic usage for a date range (YYYY-MM-DD, inclusive) */
+  async function fetchAntibioticUsage(startDate: string, endDate: string): Promise<AntibioticUsage[]> {
+    return (
+      await run(() =>
+        invoke<AntibioticUsage[]>('get_antibiotic_usage', { startDate, endDate })
+      )
+    ) ?? []
+  }
+
+  return {
+    loading,
+    error,
+    fetchDashboardData,
+    fetchTopDrugs,
+    fetchDrugMonthly,
+    fetchAvailableYears,
+    searchDrugs,
+    fetchAntibioticUsage,
+  }
 }

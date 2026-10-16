@@ -6,8 +6,9 @@
 
 use crate::config;
 use crate::db::{DbConfig, init_pool, with_pool};
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
-use sqlx::Row;
+use sqlx::{AssertSqlSafe, Row};
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
@@ -36,6 +37,9 @@ static TOP_DRUGS_CACHE: LazyLock<Cache<Vec<DrugSummary>>> =
 static MONTHLY_CACHE: LazyLock<Cache<Vec<DrugMonthlyData>>> =
   LazyLock::new(|| Arc::new(RwLock::new(HashMap::new())));
 
+static ANTIBIOTICS_CACHE: LazyLock<Cache<Vec<AntibioticUsage>>> =
+  LazyLock::new(|| Arc::new(RwLock::new(HashMap::new())));
+
 /// Try to read a fresh value from `cache` for `key`.
 /// Returns `None` if the key is absent or its TTL has expired.
 async fn cache_get<T: Clone>(cache: &Cache<T>, key: &str) -> Option<T> {
@@ -59,6 +63,7 @@ pub(crate) async fn invalidate_all_caches() {
   YEARS_CACHE.write().await.clear();
   TOP_DRUGS_CACHE.write().await.clear();
   MONTHLY_CACHE.write().await.clear();
+  ANTIBIOTICS_CACHE.write().await.clear();
 }
 
 // ── Data structs ───────────────────────────────────────────────────────────────
@@ -96,6 +101,18 @@ pub struct DrugItem {
 pub struct DashboardBundle {
   pub years: Vec<i32>,
   pub top_drugs: Vec<DrugSummary>,
+}
+
+/// Injectable-antibiotic usage for one drug inside a date range.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AntibioticUsage {
+  pub icode: String,
+  pub drug_name: String,
+  /// Dispensing unit from `drugitems.units` (empty when the source row has none).
+  pub units: String,
+  pub total_qty: f64,
+  /// Distinct visits (`opitemrece.vn`) the drug was dispensed in.
+  pub visit_count: u64,
 }
 
 // ── Row-extraction helpers ─────────────────────────────────────────────────────
@@ -249,7 +266,11 @@ async fn fetch_top_drugs_internal(
     placeholders
   );
 
-  let mut q = sqlx::query(&monthly_sql).bind(year);
+  // sqlx 0.9 requires SqlSafeStr; the only dynamic part of this SQL is the
+  // `?` placeholder list, whose count mirrors `icodes`. Every icode value is
+  // bound as a parameter below, so no user data is interpolated — audited
+  // and wrapped in AssertSqlSafe explicitly.
+  let mut q = sqlx::query(AssertSqlSafe(monthly_sql)).bind(year);
   for ic in &icodes {
     q = q.bind(ic.as_str());
   }
@@ -299,8 +320,66 @@ async fn fetch_top_drugs_internal(
   Ok(result)
 }
 
-// ── Tauri commands ─────────────────────────────────────────────────────────────
+/// Fetch injectable-antibiotic usage between `start` and `end` (inclusive),
+/// biggest total dispensed quantity first.
+///
+/// Filters on `drugitems.dosageform` (HOSxP stores both spellings) and
+/// `drugitems.drugcategory`, aggregated per drug over `opitemrece.vstdate`.
+async fn fetch_antibiotic_usage_internal(
+  pool: &sqlx::MySqlPool,
+  start: NaiveDate,
+  end: NaiveDate,
+) -> Result<Vec<AntibioticUsage>, sqlx::Error> {
+  let cache_key = format!("abx_{}_{}", start, end);
+  if let Some(cached) = cache_get(&*ANTIBIOTICS_CACHE, &cache_key).await {
+    return Ok(cached);
+  }
 
+  let rows = sqlx::query(
+    r#"
+        SELECT STRAIGHT_JOIN
+            o.icode                        AS icode,
+            COALESCE(d.name, o.icode)      AS drug_name,
+            COALESCE(d.units, '')          AS units,
+            CAST(SUM(o.qty) AS DOUBLE)     AS total_qty,
+            COUNT(DISTINCT o.vn)           AS visit_count
+        FROM opitemrece o
+        JOIN drugitems d ON d.icode = o.icode
+        WHERE o.vstdate >= ?
+          AND o.vstdate <= ?
+          AND d.dosageform IN ('INJECTIONS', 'Injection')
+          AND d.drugcategory = 'ANTIBIOTICS'
+        GROUP BY o.icode, d.name, d.units
+        ORDER BY total_qty DESC
+        "#,
+  )
+  .bind(start)
+  .bind(end)
+  .fetch_all(pool)
+  .await?;
+
+  let result: Vec<AntibioticUsage> = rows
+    .iter()
+    .map(|row| {
+      let ic = col_string(row, "icode");
+      AntibioticUsage {
+        drug_name: {
+          let v = col_string(row, "drug_name");
+          if v.is_empty() { ic.clone() } else { v }
+        },
+        icode: ic,
+        units: col_string(row, "units"),
+        total_qty: col_f64(row, "total_qty"),
+        visit_count: col_u32(row, "visit_count") as u64,
+      }
+    })
+    .collect();
+
+  cache_set(&*ANTIBIOTICS_CACHE, cache_key, result.clone()).await;
+  Ok(result)
+}
+
+// ── Tauri commands ─────────────────────────────────────────────────────────────
 /// Initialise (or replace) the global MySQL connection pool, then wipe all
 /// query caches so stale data from the previous session is never served.
 #[tauri::command]
@@ -434,6 +513,32 @@ pub async fn get_drug_monthly_qty(
       cache_set(&*MONTHLY_CACHE, cache_key, result.clone()).await;
       Ok::<Vec<DrugMonthlyData>, sqlx::Error>(result)
     })
+  })
+  .await
+}
+
+/// Injectable-antibiotic usage for the dashboard date range (inclusive).
+///
+/// Both dates must be `YYYY-MM-DD`; a malformed or reversed range fails fast
+/// with a message the frontend can show directly.
+#[tauri::command]
+pub async fn get_antibiotic_usage(
+  start_date: String,
+  end_date: String,
+) -> Result<Vec<AntibioticUsage>, String> {
+  let start = NaiveDate::parse_from_str(&start_date, "%Y-%m-%d")
+    .map_err(|_| format!("start_date must be YYYY-MM-DD, got: {start_date}"))?;
+  let end = NaiveDate::parse_from_str(&end_date, "%Y-%m-%d")
+    .map_err(|_| format!("end_date must be YYYY-MM-DD, got: {end_date}"))?;
+
+  if start > end {
+    return Err(format!(
+      "start_date ({start}) must not be after end_date ({end})"
+    ));
+  }
+
+  with_pool(move |pool| {
+    Box::pin(async move { fetch_antibiotic_usage_internal(pool, start, end).await })
   })
   .await
 }

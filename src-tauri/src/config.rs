@@ -88,7 +88,7 @@ struct EncryptedConfigFile {
 /// Returns `Ok(None)` when no config file exists yet (first launch).
 pub fn load_config() -> Result<Option<DbConfig>, String> {
   let path = config_path();
-  if !path.as_ref().map_or(false, |p| p.exists()) {
+  if !path.as_ref().is_ok_and(|p| p.exists()) {
     return Ok(None);
   }
 

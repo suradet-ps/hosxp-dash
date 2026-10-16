@@ -10,9 +10,22 @@
             </div>
         </div>
 
+        <nav class="view-switch">
+            <button class="view-switch-btn" :class="{ active: view === 'overview' }"
+                @click="view = 'overview'">
+                <ChartColumnBig :size="14" :stroke-width="2.4" />
+                ภาพรวมรายปี
+            </button>
+            <button class="view-switch-btn" :class="{ active: view === 'antibiotics' }"
+                @click="view = 'antibiotics'">
+                <Syringe :size="14" :stroke-width="2.4" />
+                ยาฉีด Antibiotics
+            </button>
+        </nav>
+
         <div class="header-controls">
-            <YearSelector />
-            <DrugSearchBar />
+            <YearSelector v-if="view === 'overview'" />
+            <DrugSearchBar v-if="view === 'overview'" />
             <div class="connection-badge" :class="dbStore.connected ? 'badge-ok' : 'badge-err'"
                 @click="showSettings = true" title="คลิกเพื่อตั้งค่าการเชื่อมต่อ">
                 <Wifi v-if="dbStore.connected" :size="13" :stroke-width="2.5" />
@@ -27,21 +40,26 @@
 
     <!-- Main content -->
     <main class="app-main">
-        <!-- Sidebar: Top drugs -->
-        <aside class="sidebar">
-            <TopDrugsPanel :drugs="dashStore.topDrugs" :loading="dashStore.loading" />
-        </aside>
+        <template v-if="view === 'overview'">
+            <!-- Sidebar: Top drugs -->
+            <aside class="sidebar">
+                <TopDrugsPanel :drugs="dashStore.topDrugs" :loading="dashStore.loading" />
+            </aside>
 
-        <!-- Right panel -->
-        <div class="content-area">
-            <!-- KPI Bar -->
-            <SummaryKpiBar />
+            <!-- Right panel -->
+            <div class="content-area">
+                <!-- KPI Bar -->
+                <SummaryKpiBar />
 
-            <!-- Chart area -->
-            <div class="chart-card">
-                <DrugTrendChart :data="dashStore.currentChartData" :loading="dashStore.loading" />
+                <!-- Chart area -->
+                <div class="chart-card">
+                    <DrugTrendChart :data="dashStore.currentChartData" :loading="dashStore.loading" />
+                </div>
             </div>
-        </div>
+        </template>
+
+        <!-- Injectable-antibiotic dashboard -->
+        <AntibioticsDashboard v-else />
     </main>
 
     <!-- Error banner -->
@@ -58,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { Wifi, WifiOff, Settings, TriangleAlert, X } from 'lucide-vue-next'
+import { Wifi, WifiOff, Settings, TriangleAlert, X, ChartColumnBig, Syringe } from 'lucide-vue-next'
 import { useDbConfigStore } from './stores/dbConfig'
 import { useDashboardStore } from './stores/dashboard'
 import { useDrugData } from './composables/useDrugData'
@@ -68,6 +86,7 @@ import DrugSearchBar from './components/DrugSearchBar.vue'
 import TopDrugsPanel from './components/TopDrugsPanel.vue'
 import SummaryKpiBar from './components/SummaryKpiBar.vue'
 import DrugTrendChart from './components/DrugTrendChart.vue'
+import AntibioticsDashboard from './components/AntibioticsDashboard.vue'
 import logoUrl from './assets/logo.svg'
 
 const dbStore = useDbConfigStore()
@@ -75,6 +94,7 @@ const dashStore = useDashboardStore()
 const { fetchDashboardData, fetchDrugMonthly } = useDrugData()
 
 const showSettings = ref(false)
+const view = ref<'overview' | 'antibiotics'>('overview')
 
 async function loadDashboard() {
     if (!dbStore.connected) return
@@ -208,6 +228,44 @@ onMounted(async () => {
     font-size: 11px;
     color: rgba(255, 255, 255, 0.92);
     margin-top: 1px;
+}
+
+/* ── View switch (segmented control) ── */
+.view-switch {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 11px;
+    flex-shrink: 0;
+}
+
+.view-switch-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Tahoma', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.view-switch-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.view-switch-btn.active {
+    background: #ffffff;
+    color: var(--basil-500);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
 .header-controls {

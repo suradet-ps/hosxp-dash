@@ -17,6 +17,7 @@ tauri-plugin-shell = "2"                              # exposes shell commands t
 serde = { version = "1", features = ["derive"] }      # serialization for IPC payloads
 serde_json = "1"                                      # JSON encode/decode (Tauri IPC transport)
 sqlx = { version = "0.9", features = ["mysql", "runtime-tokio", "chrono"] } # async MySQL driver
+chrono = "0.4"                                        # date parsing/validation for range queries (sqlx uses it too)
 tokio = { version = "1", features = ["full"] }        # async runtime
 encryptman = "0.4"                                     # AES-256-GCM encryption for config
 encryptman-keyring = "0.1"                              # OS keychain-backed master key storage

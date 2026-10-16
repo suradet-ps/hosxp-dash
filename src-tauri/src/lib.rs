@@ -8,8 +8,8 @@ mod config;
 mod db;
 
 use commands::{
-  connect_db, get_available_years, get_dashboard_data, get_drug_list, get_drug_monthly_qty,
-  get_top_drugs, load_config, save_db_config,
+  connect_db, get_antibiotic_usage, get_available_years, get_dashboard_data, get_drug_list,
+  get_drug_monthly_qty, get_top_drugs, load_config, save_db_config,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -23,6 +23,7 @@ pub fn run() {
     .plugin(tauri_plugin_shell::init())
     .invoke_handler(tauri::generate_handler![
       connect_db,
+      get_antibiotic_usage,
       get_dashboard_data,
       get_drug_monthly_qty,
       get_top_drugs,
