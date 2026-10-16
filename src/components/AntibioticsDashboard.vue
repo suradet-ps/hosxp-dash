@@ -227,12 +227,7 @@
                             <div class="pr-code">{{ item.icode }}</div>
                         </td>
                         <td class="pr-col-unit">{{ item.units || '—' }}</td>
-                        <td class="pr-col-qty">
-                            <div class="pr-qty-wrap">
-                                <div class="pr-bar"><div class="pr-bar-fill" :style="{ width: barWidth(item) }" /></div>
-                                <span class="pr-qty-value">{{ formatQty(item.total_qty) }}</span>
-                            </div>
-                        </td>
+                        <td class="pr-col-qty">{{ formatQty(item.total_qty) }}</td>
                         <td class="pr-col-visit">{{ item.visit_count.toLocaleString() }}</td>
                     </tr>
                 </tbody>
@@ -1176,35 +1171,12 @@ tbody tr:last-child td {
 }
 
 .pr-col-qty {
-    width: 210px;
-}
-
-.pr-qty-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pr-bar {
-    flex: 1;
-    height: 6px;
-    border-radius: 3px;
-    background: rgba(78, 110, 47, 0.12);
-    overflow: hidden;
-}
-
-.pr-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    background: #4E6E2F;
-}
-
-.pr-qty-value {
+    width: 110px;
+    text-align: right;
     font-size: 12.5px;
     font-weight: 700;
     color: #4E6E2F;
-    min-width: 64px;
-    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .pr-col-visit {
