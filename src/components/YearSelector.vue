@@ -1,16 +1,20 @@
 <template>
 <div class="year-selector">
-    <label>ปี พ.ศ.</label>
-    <select v-model="selectedCeYear" @change="onYearChange" class="year-select">
-        <option v-for="year in displayYears" :key="year" :value="year">
-            {{ year + 543 }} ({{ year }})
-        </option>
-    </select>
+    <label for="year-select" class="year-label">ปี พ.ศ.</label>
+    <div class="year-select-wrap">
+        <select id="year-select" v-model="selectedCeYear" class="year-select" @change="onYearChange">
+            <option v-for="year in displayYears" :key="year" :value="year">
+                {{ year + 543 }} ({{ year }})
+            </option>
+        </select>
+        <ChevronDown :size="14" :stroke-width="2.5" class="year-chevron" aria-hidden="true" />
+    </div>
 </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { ChevronDown } from 'lucide-vue-next'
 import { useDashboardStore } from '../stores/dashboard'
 
 const dashStore = useDashboardStore()
@@ -42,38 +46,54 @@ function onYearChange() {
 .year-selector {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
-.year-selector label {
-    font-size: 13px;
+.year-label {
+    font-size: var(--text-md);
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--text-secondary);
     white-space: nowrap;
 }
 
+.year-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .year-select {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-card);
-    border-radius: 8px;
-    padding: 8px 32px 8px 14px;
+    background: var(--bg-inset);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 7px 30px 7px 12px;
     color: var(--text-primary);
-    font-family: 'Tahoma', sans-serif;
-    font-size: 15px;
+    font-family: inherit;
+    font-size: var(--text-md);
     font-weight: 700;
     cursor: pointer;
     outline: none;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234E6E2F' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    box-shadow: 0 1px 4px rgba(75, 54, 33, 0.08);
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+        background var(--dur) var(--ease);
+    font-variant-numeric: tabular-nums;
 }
 
-.year-select:focus,
 .year-select:hover {
-    border-color: var(--basil-300);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+    background: #eaeade;
+}
+
+.year-select:focus-visible {
+    background: #ffffff;
+    border-color: var(--basil-400);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+.year-chevron {
+    position: absolute;
+    right: 9px;
+    color: var(--basil-500);
+    pointer-events: none;
 }
 </style>

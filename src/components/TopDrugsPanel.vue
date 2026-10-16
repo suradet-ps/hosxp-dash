@@ -1,25 +1,28 @@
 <template>
 <div class="top-panel">
     <div class="panel-header">
-        <h3><Trophy :size="15" :stroke-width="2.5" class="header-icon" /> Top {{ drugs.length || 10 }} ยาจ่ายสูงสุด</h3>
-        <span class="year-badge">{{ selectedYear + 543 }}</span>
+        <div class="panel-title">
+            <Trophy :size="15" :stroke-width="2.4" class="header-icon" aria-hidden="true" />
+            <span>Top {{ drugs.length || 10 }} ยาจ่ายสูงสุด</span>
+        </div>
+        <span class="year-badge">พ.ศ. {{ selectedYear + 543 }}</span>
     </div>
 
-    <div v-if="loading" class="skeleton-list">
-        <div v-for="i in 10" :key="i" class="skeleton-row" :style="`animation-delay: ${i * 0.05}s`" />
+    <div v-if="loading" class="skeleton-list" aria-hidden="true">
+        <div v-for="i in 9" :key="i" class="skeleton-row" :style="`animation-delay: ${i * 0.05}s`" />
     </div>
 
     <div v-else-if="!drugs.length" class="empty-state">
-        <div class="empty-icon"><DatabaseZap :size="40" :stroke-width="1.5" /></div>
+        <div class="empty-icon"><DatabaseZap :size="38" :stroke-width="1.5" /></div>
         <p>ยังไม่มีข้อมูล<br />กรุณาเชื่อมต่อฐานข้อมูล</p>
     </div>
 
     <div v-else class="drug-list">
-        <button v-for="(drug, idx) in drugs" :key="drug.icode" class="drug-row"
-            :class="{ active: dashStore.selectedIcode === drug.icode }" @click="selectDrug(drug.icode)">
-            <div class="drug-rank"
-                :style="idx === 0 ? 'color:#7B5800' : idx === 1 ? 'color:#666666' : idx === 2 ? 'color:#A0522D' : ''">{{
-                    idx + 1 }}</div>
+        <button v-for="(drug, idx) in drugs" :key="drug.icode" type="button" class="drug-row"
+            :class="{ active: dashStore.selectedIcode === drug.icode }"
+            :aria-current="dashStore.selectedIcode === drug.icode ? 'true' : undefined"
+            :title="`${drug.drug_name} (${drug.icode})`" @click="selectDrug(drug.icode)">
+            <span class="drug-rank" :class="rankClass(idx)">{{ idx + 1 }}</span>
             <div class="drug-info">
                 <div class="drug-name">{{ drug.drug_name }}</div>
                 <div class="drug-code">{{ drug.icode }}</div>
@@ -27,7 +30,7 @@
                     <div class="mini-bar-fill" :style="`width: ${maxQty > 0 ? (drug.total_qty / maxQty) * 100 : 0}%`" />
                 </div>
             </div>
-            <div class="drug-qty">{{ formatQty(drug.total_qty) }}</div>
+            <div class="drug-qty tnum">{{ formatQty(drug.total_qty) }}</div>
         </button>
     </div>
 </div>
@@ -58,7 +61,9 @@ function selectDrug(icode: string) {
     dashStore.selectDrug(icode)
 }
 
-
+function rankClass(idx: number): string {
+    return idx < 3 ? `rank-top rank-${idx + 1}` : ''
+}
 </script>
 
 <style scoped>
@@ -73,59 +78,65 @@ function selectDrug(icode: string) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 20px 14px;
+    gap: var(--space-3);
+    padding: 14px var(--space-4);
     border-bottom: 1px solid var(--border-card);
     flex-shrink: 0;
+    background: var(--bg-surface);
 }
 
-.panel-header h3 {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+.panel-title {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .header-icon {
-    color: var(--basil-400);
+    color: var(--basil-500);
     flex-shrink: 0;
 }
 
 .year-badge {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 12px;
-    background: var(--basil-50);
-    color: var(--basil-400);
-    padding: 3px 9px;
-    border-radius: 20px;
-    border: 1px solid rgba(78, 110, 47, 0.25);
-    font-weight: 600;
+    font-size: var(--text-xs);
+    background: var(--bg-elevated);
+    color: var(--basil-600);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-subtle);
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 .drug-list {
     flex: 1;
     overflow-y: auto;
-    padding: 8px 10px 12px;
+    padding: var(--space-2) var(--space-3) var(--space-3);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .drug-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
+    gap: var(--space-3);
+    padding: 9px 10px;
+    border-radius: var(--radius-md);
     border: 1px solid transparent;
     background: none;
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s ease;
+    font-family: inherit;
+    transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+        box-shadow var(--dur-fast) var(--ease);
     width: 100%;
 }
 
@@ -134,24 +145,48 @@ function selectDrug(icode: string) {
     border-color: var(--border-subtle);
 }
 
+.drug-row:active {
+    background: #e7eeda;
+}
+
 .drug-row.active {
-    background: linear-gradient(135deg, var(--basil-50), #EFF5E6);
-    border-color: rgba(78, 110, 47, 0.4);
-    box-shadow: 0 2px 12px var(--basil-glow);
+    background: var(--basil-50);
+    border-color: rgba(78, 110, 47, 0.38);
+    box-shadow: inset 3px 0 0 var(--basil-500), var(--shadow-xs);
 }
 
 .drug-rank {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-muted);
-    width: 24px;
-    text-align: center;
     flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
 }
 
-.drug-row.active .drug-rank {
-    color: var(--basil-400);
+.drug-rank.rank-top {
+    color: #ffffff;
+    font-size: var(--text-xs);
+}
+
+.drug-rank.rank-1 {
+    background: linear-gradient(135deg, #d9ad3f, #b8860b);
+    box-shadow: 0 2px 6px rgba(184, 134, 11, 0.3);
+}
+
+.drug-rank.rank-2 {
+    background: linear-gradient(135deg, #a8b0b8, #7f8a94);
+    box-shadow: 0 2px 6px rgba(127, 138, 148, 0.3);
+}
+
+.drug-rank.rank-3 {
+    background: linear-gradient(135deg, #c98d5e, #a0522d);
+    box-shadow: 0 2px 6px rgba(160, 82, 45, 0.3);
 }
 
 .drug-info {
@@ -160,20 +195,21 @@ function selectDrug(icode: string) {
 }
 
 .drug-name {
-    font-size: 13px;
+    font-size: var(--text-md);
     font-weight: 600;
     color: var(--text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-bottom: 2px;
+    line-height: var(--leading-tight);
 }
 
 .drug-code {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 10px;
+    font-size: var(--text-2xs);
     color: var(--text-muted);
+    margin-top: 1px;
     margin-bottom: 5px;
+    letter-spacing: 0.02em;
 }
 
 .mini-bar-track {
@@ -185,31 +221,30 @@ function selectDrug(icode: string) {
 
 .mini-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--basil-400), var(--shrimp-400));
+    background: linear-gradient(90deg, var(--basil-300), var(--basil-500));
     border-radius: 2px;
-    transition: width 0.6s ease;
+    transition: width 0.6s var(--ease);
 }
 
 .drug-qty {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 11px;
-    color: var(--basil-400);
+    font-size: var(--text-sm);
+    color: var(--basil-600);
     white-space: nowrap;
     flex-shrink: 0;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 /* Skeleton */
 .skeleton-list {
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-3);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .skeleton-row {
-    height: 64px;
-    border-radius: 10px;
+    height: 58px;
+    border-radius: var(--radius-md);
     background: linear-gradient(90deg,
             var(--bg-surface) 25%,
             var(--basil-50) 50%,
@@ -224,10 +259,12 @@ function selectDrug(icode: string) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: var(--space-3);
     color: var(--text-muted);
     text-align: center;
-    padding: 24px;
+    padding: var(--space-6);
+    font-size: var(--text-md);
+    line-height: 1.6;
 }
 
 .empty-icon {

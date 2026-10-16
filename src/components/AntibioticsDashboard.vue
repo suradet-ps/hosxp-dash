@@ -2,103 +2,85 @@
 <div class="abx-view fade-slide-up">
     <!-- ── Filter bar ── -->
     <div class="filter-card">
-        <div class="filter-icon">
-            <CalendarRange :size="20" :stroke-width="2.2" />
+        <div class="filter-icon" aria-hidden="true">
+            <CalendarRange :size="19" :stroke-width="2.2" />
         </div>
 
         <div class="filter-fields">
             <label class="date-field">
                 <span>จากวันที่</span>
-                <input v-model="startDate" type="date" :max="endDate" />
+                <input v-model="startDate" type="date" :max="endDate" aria-label="วันที่เริ่มต้น" />
             </label>
-            <span class="date-sep">→</span>
+            <span class="date-sep" aria-hidden="true">→</span>
             <label class="date-field">
                 <span>ถึงวันที่</span>
-                <input v-model="endDate" type="date" :min="startDate" />
+                <input v-model="endDate" type="date" :min="startDate" aria-label="วันที่สิ้นสุด" />
             </label>
         </div>
 
-        <div class="presets">
-            <button v-for="p in PRESETS" :key="p.key" class="preset-btn"
-                :class="{ active: activePreset === p.key }" @click="applyPreset(p.key)">
+        <div class="presets" role="group" aria-label="ช่วงเวลาสำเร็จรูป">
+            <button v-for="p in PRESETS" :key="p.key" type="button" class="preset-btn"
+                :class="{ active: activePreset === p.key }" :aria-pressed="activePreset === p.key"
+                @click="applyPreset(p.key)">
                 {{ p.label }}
             </button>
         </div>
 
         <div class="filter-right">
             <span v-if="rangeCaption" class="range-caption">{{ rangeCaption }}</span>
-            <button class="refresh-btn" :disabled="loading" title="ค้นหาใหม่" @click="load()">
-                <RefreshCw :size="15" :stroke-width="2.4" :class="{ spin: loading }" />
+            <button type="button" class="refresh-btn" :disabled="loading" aria-label="ค้นหาข้อมูลใหม่" title="ค้นหาใหม่"
+                @click="load()">
+                <RefreshCw :size="15" :stroke-width="2.4" :class="{ spin: loading }" aria-hidden="true" />
             </button>
-            <button class="export-btn" :disabled="loading || exporting || !items.length" @click="exportReport">
-                <Loader2 v-if="exporting" :size="15" :stroke-width="2.4" class="spin" />
-                <FileDown v-else :size="15" :stroke-width="2.4" />
+            <button type="button" class="export-btn" :disabled="loading || exporting || !items.length"
+                @click="exportReport">
+                <Loader2 v-if="exporting" :size="15" :stroke-width="2.4" class="spin" aria-hidden="true" />
+                <FileDown v-else :size="15" :stroke-width="2.4" aria-hidden="true" />
                 {{ exporting ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
             </button>
         </div>
     </div>
 
     <!-- ── Export result ── -->
-    <div v-if="exportedPath" class="export-notice">
-        <FileCheck2 :size="15" :stroke-width="2.4" />
+    <div v-if="exportedPath" class="export-notice" role="status">
+        <FileCheck2 :size="15" :stroke-width="2.4" aria-hidden="true" />
         <span class="export-path">บันทึก PDF แล้ว: {{ exportedPath }}</span>
-        <button class="notice-btn" @click="openExported">
-            <FolderOpen :size="13" :stroke-width="2.4" /> เปิดไฟล์
+        <button type="button" class="notice-btn" @click="openExported">
+            <FolderOpen :size="13" :stroke-width="2.4" aria-hidden="true" /> เปิดไฟล์
         </button>
-        <button class="notice-close" title="ปิด" @click="exportedPath = null">
-            <X :size="13" :stroke-width="2.5" />
+        <button type="button" class="notice-close" aria-label="ปิดการแจ้งเตือน" @click="exportedPath = null">
+            <X :size="13" :stroke-width="2.5" aria-hidden="true" />
         </button>
     </div>
 
-    <div v-if="exportError" class="abx-error">
-        <TriangleAlert :size="15" :stroke-width="2.4" />
+    <div v-if="exportError" class="abx-error" role="alert">
+        <TriangleAlert :size="15" :stroke-width="2.4" aria-hidden="true" />
         <span>สร้างไฟล์ PDF ไม่สำเร็จ: {{ exportError }}</span>
     </div>
 
     <!-- ── Error ── -->
-    <div v-if="error" class="abx-error">
-        <TriangleAlert :size="15" :stroke-width="2.4" />
+    <div v-if="error" class="abx-error" role="alert">
+        <TriangleAlert :size="15" :stroke-width="2.4" aria-hidden="true" />
         <span>{{ error }}</span>
     </div>
 
     <!-- ── KPI row ── -->
     <div class="kpi-row">
-        <div class="kpi-card" style="animation-delay: 0s">
-            <div class="kpi-icon kpi-icon--syringe">
-                <Syringe :size="22" :stroke-width="2" />
-            </div>
-            <div class="kpi-body">
-                <div class="kpi-label">ปริมาณการใช้รวม</div>
-                <div class="kpi-value">{{ formatQty(totalQty) }}</div>
-                <div class="kpi-unit">หน่วยนับรวมทุกรายการ</div>
-            </div>
-        </div>
+        <StatCard label="ปริมาณการใช้รวม" :value="formatQty(totalQty)" unit="หน่วยนับรวมทุกรายการ" tone="basil"
+            delay="0s">
+            <template #icon><Syringe :size="20" :stroke-width="2" /></template>
+        </StatCard>
 
-        <div class="kpi-card" style="animation-delay: 0.08s">
-            <div class="kpi-icon kpi-icon--box">
-                <Package :size="22" :stroke-width="2" />
-            </div>
-            <div class="kpi-body">
-                <div class="kpi-label">รายการยาฉีด</div>
-                <div class="kpi-value">{{ items.length.toLocaleString() }}</div>
-                <div class="kpi-unit">รายการที่มีการใช้</div>
-            </div>
-        </div>
+        <StatCard label="รายการยาฉีด" :value="items.length.toLocaleString()" unit="รายการที่มีการใช้"
+            tone="shrimp" delay="0.06s">
+            <template #icon><Package :size="20" :stroke-width="2" /></template>
+        </StatCard>
 
-        <div class="kpi-card" style="animation-delay: 0.16s">
-            <div class="kpi-icon kpi-icon--trophy">
-                <Trophy :size="22" :stroke-width="2" />
-            </div>
-            <div class="kpi-body">
-                <div class="kpi-label">ใช้มากที่สุด</div>
-                <div class="kpi-value kpi-value--name" :title="topItem?.drug_name ?? ''">
-                    {{ topItem?.drug_name ?? '—' }}
-                </div>
-                <div class="kpi-unit">
-                    {{ topItem ? `${formatQty(topItem.total_qty)} ${topItem.units || 'หน่วย'}` : 'ยังไม่มีข้อมูล' }}
-                </div>
-            </div>
-        </div>
+        <StatCard label="ใช้มากที่สุด" :value="topItem?.drug_name ?? '—'"
+            :unit="topItem ? `${formatQty(topItem.total_qty)} ${topItem.units || 'หน่วย'}` : 'ยังไม่มีข้อมูล'"
+            :title="topItem?.drug_name ?? ''" tone="neutral" compact delay="0.12s">
+            <template #icon><Trophy :size="20" :stroke-width="2" /></template>
+        </StatCard>
     </div>
 
     <!-- ── Chart ── -->
@@ -117,14 +99,14 @@
         </div>
 
         <div class="table-scroll">
-            <table v-if="items.length">
+            <table v-if="items.length" aria-label="ตารางจัดอันดับปริมาณการใช้ยาฉีด Antibiotics">
                 <thead>
                     <tr>
-                        <th class="col-rank">อันดับ</th>
-                        <th>รายการยา</th>
-                        <th class="col-unit">หน่วย</th>
-                        <th class="col-qty">จำนวนที่ใช้</th>
-                        <th class="col-visit">ครั้งที่จ่าย</th>
+                        <th scope="col" class="col-rank">อันดับ</th>
+                        <th scope="col">รายการยา</th>
+                        <th scope="col" class="col-unit">หน่วย</th>
+                        <th scope="col" class="col-qty">จำนวนที่ใช้</th>
+                        <th scope="col" class="col-visit">ครั้งที่จ่าย</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -144,21 +126,21 @@
                                 <div class="qty-bar">
                                     <div class="qty-fill" :style="{ width: barWidth(item) }" />
                                 </div>
-                                <span class="qty-value">{{ formatQty(item.total_qty) }}</span>
+                                <span class="qty-value tnum">{{ formatQty(item.total_qty) }}</span>
                             </div>
                         </td>
-                        <td class="col-visit">{{ item.visit_count.toLocaleString() }}</td>
+                        <td class="col-visit tnum">{{ item.visit_count.toLocaleString() }}</td>
                     </tr>
                 </tbody>
             </table>
 
-            <div v-if="loading && !items.length" class="table-state">
-                <Loader2 :size="30" :stroke-width="2" class="spin" />
+            <div v-if="loading && !items.length" class="table-state" role="status">
+                <Loader2 :size="28" :stroke-width="2" class="spin" />
                 <p>กำลังโหลดข้อมูล...</p>
             </div>
 
             <div v-else-if="!items.length" class="table-state">
-                <Syringe :size="40" :stroke-width="1.2" class="state-bloom" />
+                <Syringe :size="38" :stroke-width="1.2" class="state-bloom" />
                 <p>ไม่พบข้อมูลในช่วงวันที่เลือก</p>
             </div>
         </div>
@@ -260,6 +242,7 @@ import {
     X,
 } from 'lucide-vue-next'
 import AntibioticBarChart from './AntibioticBarChart.vue'
+import StatCard from './StatCard.vue'
 import { useDbConfigStore } from '../stores/dbConfig'
 import { useDrugData } from '../composables/useDrugData'
 import type { AntibioticUsage } from '../composables/useDrugData'
@@ -413,8 +396,8 @@ onMounted(() => load())
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 18px;
+    gap: var(--space-4);
+    padding: var(--space-5);
     overflow-y: auto;
     background: var(--bg-base);
 }
@@ -423,13 +406,13 @@ onMounted(() => load())
 .filter-card {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-4);
     flex-wrap: wrap;
     background: var(--bg-elevated);
     border: 1px solid var(--border-card);
-    border-radius: 14px;
-    padding: 12px 18px;
-    box-shadow: 0 2px 8px rgba(75, 54, 33, 0.06);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-5);
+    box-shadow: var(--shadow-sm);
     flex-shrink: 0;
 }
 
@@ -439,7 +422,7 @@ onMounted(() => load())
     justify-content: center;
     width: 38px;
     height: 38px;
-    border-radius: 11px;
+    border-radius: var(--radius-sm);
     background: linear-gradient(135deg, rgba(78, 110, 47, 0.12), rgba(78, 110, 47, 0.04));
     color: var(--basil-400);
     flex-shrink: 0;
@@ -448,7 +431,7 @@ onMounted(() => load())
 .filter-fields {
     display: flex;
     align-items: flex-end;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .date-field {
@@ -458,33 +441,38 @@ onMounted(() => load())
 }
 
 .date-field span {
-    font-size: 11px;
+    font-size: var(--text-xs);
     font-weight: 700;
     color: var(--text-muted);
     letter-spacing: 0.04em;
 }
 
 .date-field input {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 13px;
+    font-family: inherit;
+    font-size: var(--text-md);
     color: var(--text-primary);
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 6px 10px;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    font-variant-numeric: tabular-nums;
+}
+
+.date-field input:hover {
+    border-color: var(--border-active);
 }
 
 .date-field input:focus {
-    border-color: var(--border-active);
-    box-shadow: 0 0 0 3px var(--basil-glow);
+    border-color: var(--basil-400);
+    box-shadow: var(--focus-ring);
 }
 
 .date-sep {
     color: var(--text-muted);
-    font-size: 14px;
-    padding-bottom: 8px;
+    font-size: var(--text-md);
+    padding-bottom: 7px;
 }
 
 .presets {
@@ -494,22 +482,26 @@ onMounted(() => load())
 }
 
 .preset-btn {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 12px;
+    font-family: inherit;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--text-secondary);
     background: var(--bg-surface);
     border: 1px solid var(--border-subtle);
-    border-radius: 20px;
+    border-radius: var(--radius-pill);
     padding: 5px 13px;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all var(--dur-fast) var(--ease);
     white-space: nowrap;
 }
 
 .preset-btn:hover {
     border-color: var(--border-active);
-    color: var(--basil-400);
+    color: var(--basil-500);
+}
+
+.preset-btn:active {
+    transform: translateY(1px);
 }
 
 .preset-btn.active {
@@ -523,11 +515,11 @@ onMounted(() => load())
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .range-caption {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     font-weight: 600;
     white-space: nowrap;
@@ -537,19 +529,23 @@ onMounted(() => load())
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
     background: var(--bg-surface);
     color: var(--basil-400);
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all var(--dur-fast) var(--ease);
 }
 
 .refresh-btn:hover:not(:disabled) {
     border-color: var(--border-active);
     background: var(--basil-50);
+}
+
+.refresh-btn:active:not(:disabled) {
+    transform: translateY(1px);
 }
 
 .refresh-btn:disabled {
@@ -561,108 +557,25 @@ onMounted(() => load())
 .abx-error {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(192, 57, 43, 0.35);
-    color: var(--chili-400);
-    border-radius: 12px;
+    gap: var(--space-3);
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(169, 50, 38, 0.35);
+    border-left: 4px solid var(--chili-400);
+    color: var(--chili-500);
+    border-radius: var(--radius-md);
     padding: 10px 16px;
-    font-size: 13px;
+    font-size: var(--text-md);
     font-weight: 600;
     flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
 }
 
 /* ── KPI row ── */
 .kpi-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    gap: var(--space-4);
     flex-shrink: 0;
-}
-
-.kpi-card {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-card);
-    border-radius: 14px;
-    padding: 16px 20px;
-    box-shadow: 0 2px 8px rgba(75, 54, 33, 0.06);
-    animation: fadeSlideUp 0.4s ease forwards;
-    opacity: 0;
-    transition: box-shadow 0.25s ease;
-    min-width: 0;
-}
-
-.kpi-card:hover {
-    box-shadow: 0 4px 20px var(--basil-glow);
-}
-
-.kpi-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-
-.kpi-card:hover .kpi-icon {
-    transform: scale(1.08);
-}
-
-.kpi-icon--syringe {
-    background: linear-gradient(135deg, rgba(78, 110, 47, 0.14), rgba(78, 110, 47, 0.04));
-    color: var(--basil-400);
-}
-
-.kpi-icon--box {
-    background: linear-gradient(135deg, rgba(255, 142, 126, 0.16), rgba(255, 142, 126, 0.05));
-    color: var(--shrimp-500);
-}
-
-.kpi-icon--trophy {
-    background: linear-gradient(135deg, rgba(122, 98, 72, 0.14), rgba(122, 98, 72, 0.04));
-    color: var(--text-secondary);
-}
-
-.kpi-body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.kpi-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.kpi-value {
-    font-family: 'Tahoma', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--basil-400);
-    line-height: 1.15;
-}
-
-.kpi-value--name {
-    font-size: 17px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-}
-
-.kpi-unit {
-    font-size: 12px;
-    color: var(--text-secondary);
 }
 
 /* ── Chart card ── */
@@ -671,23 +584,23 @@ onMounted(() => load())
     flex-shrink: 0;
     background: var(--bg-elevated);
     border: 1px solid var(--border-card);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(75, 54, 33, 0.06);
-    transition: box-shadow 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--dur-slow) var(--ease);
 }
 
 .chart-card:hover {
-    box-shadow: 0 4px 24px var(--basil-glow-strong);
+    box-shadow: var(--shadow-md);
 }
 
 /* ── Table card ── */
 .table-card {
     background: var(--bg-elevated);
     border: 1px solid var(--border-card);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(75, 54, 33, 0.06);
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -697,16 +610,18 @@ onMounted(() => load())
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 20px;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
     border-bottom: 1px solid var(--border-card);
     flex-shrink: 0;
+    background: var(--bg-surface);
 }
 
 .table-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: var(--space-2);
+    font-size: var(--text-md);
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -716,7 +631,7 @@ onMounted(() => load())
 }
 
 .table-sub {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     font-weight: 600;
 }
@@ -729,7 +644,7 @@ onMounted(() => load())
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: var(--text-md);
 }
 
 thead th {
@@ -738,11 +653,11 @@ thead th {
     z-index: 2;
     background: var(--bg-surface);
     text-align: left;
-    font-size: 11px;
+    font-size: var(--text-xs);
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-card);
     white-space: nowrap;
@@ -750,12 +665,12 @@ thead th {
 
 tbody td {
     padding: 9px 16px;
-    border-bottom: 1px solid rgba(75, 54, 33, 0.05);
+    border-bottom: 1px solid rgba(75, 54, 33, 0.06);
     vertical-align: middle;
 }
 
 tbody tr {
-    transition: background 0.15s ease;
+    transition: background var(--dur-fast) var(--ease);
 }
 
 tbody tr:hover {
@@ -777,8 +692,8 @@ tbody tr:last-child td {
     justify-content: center;
     width: 26px;
     height: 26px;
-    border-radius: 8px;
-    font-size: 12px;
+    border-radius: var(--radius-xs);
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-muted);
     background: rgba(75, 54, 33, 0.06);
@@ -813,7 +728,7 @@ tbody tr:last-child td {
 }
 
 .drug-code {
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: var(--text-muted);
 }
 
@@ -836,7 +751,7 @@ thead th.col-qty {
 .qty-wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-3);
 }
 
 .qty-bar {
@@ -850,8 +765,8 @@ thead th.col-qty {
 .qty-fill {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, rgba(78, 110, 47, 0.45), #4E6E2F);
-    transition: width 0.5s ease;
+    background: linear-gradient(90deg, rgba(78, 110, 47, 0.45), var(--basil-400));
+    transition: width 0.5s var(--ease);
 }
 
 .qty-value {
@@ -859,14 +774,12 @@ thead th.col-qty {
     color: var(--basil-400);
     min-width: 70px;
     text-align: right;
-    font-variant-numeric: tabular-nums;
 }
 
 .col-visit {
     width: 110px;
     color: var(--text-secondary);
     text-align: right;
-    font-variant-numeric: tabular-nums;
 }
 
 .table-state {
@@ -874,10 +787,10 @@ thead th.col-qty {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--space-3);
     padding: 44px 0;
     color: var(--text-muted);
-    font-size: 13.5px;
+    font-size: var(--text-md);
 }
 
 .state-bloom {
@@ -889,23 +802,28 @@ thead th.col-qty {
     display: flex;
     align-items: center;
     gap: 7px;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 12.5px;
+    font-family: inherit;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: #ffffff;
-    background: linear-gradient(135deg, #4E6E2F, #3A5220);
+    background: linear-gradient(135deg, var(--basil-400), var(--basil-500));
     border: none;
-    border-radius: 9px;
-    padding: 7px 15px;
+    border-radius: var(--radius-sm);
+    padding: 8px 15px;
     cursor: pointer;
     white-space: nowrap;
-    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: opacity var(--dur) var(--ease), transform var(--dur-fast) var(--ease),
+        box-shadow var(--dur) var(--ease);
     box-shadow: 0 2px 8px var(--basil-glow-strong);
 }
 
 .export-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
     box-shadow: 0 4px 14px var(--basil-glow-strong);
+}
+
+.export-btn:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-xs);
 }
 
 .export-btn:disabled {
@@ -918,15 +836,16 @@ thead th.col-qty {
 .export-notice {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: #EEF3E6;
-    border: 1px solid rgba(78, 110, 47, 0.35);
+    gap: var(--space-3);
+    background: var(--basil-50);
+    border: 1px solid var(--border-subtle);
     color: var(--basil-500);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     padding: 9px 16px;
-    font-size: 12.5px;
+    font-size: var(--text-sm);
     font-weight: 600;
     flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
 }
 
 .export-notice > svg {
@@ -946,17 +865,17 @@ thead th.col-qty {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-family: 'Tahoma', sans-serif;
-    font-size: 12px;
+    font-family: inherit;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: #ffffff;
     background: var(--basil-400);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-xs);
     padding: 5px 12px;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.18s;
+    transition: background var(--dur-fast) var(--ease);
 }
 
 .notice-btn:hover {
@@ -972,8 +891,10 @@ thead th.col-qty {
     color: var(--basil-500);
     opacity: 0.6;
     cursor: pointer;
-    padding: 3px;
-    border-radius: 5px;
+    padding: 4px;
+    border-radius: var(--radius-xs);
+    line-height: 0;
+    transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
 
 .notice-close:hover {
@@ -994,7 +915,7 @@ thead th.col-qty {
     width: 794px;
     background: #ffffff;
     color: #4B3621;
-    font-family: 'Tahoma', sans-serif;
+    font-family: var(--font-sans);
 }
 
 .pr-band {

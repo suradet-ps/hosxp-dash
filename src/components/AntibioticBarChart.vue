@@ -2,7 +2,7 @@
 <div class="abx-chart">
     <div class="chart-heading">
         <div class="heading-left">
-            <Activity :size="17" :stroke-width="2.4" />
+            <Activity :size="16" :stroke-width="2.4" aria-hidden="true" />
             <span>ปริมาณการใช้สูงสุด {{ topCount }} อันดับ</span>
         </div>
         <div v-if="data.length" class="heading-right">
@@ -10,13 +10,13 @@
         </div>
     </div>
 
-    <div v-if="loading" class="chart-state">
-        <Loader2 :size="34" :stroke-width="2" class="spin" />
+    <div v-if="loading" class="chart-state" role="status">
+        <Loader2 :size="32" :stroke-width="2" class="spin" />
         <p>กำลังโหลดข้อมูล...</p>
     </div>
 
     <div v-else-if="!data.length" class="chart-state">
-        <Syringe :size="46" :stroke-width="1.2" class="state-bloom" />
+        <Syringe :size="44" :stroke-width="1.2" class="state-bloom" />
         <p>ไม่พบข้อมูลยาฉีด Antibiotics</p>
         <p class="state-sub">ลองปรับช่วงวันที่แล้วค้นหาอีกครั้ง</p>
     </div>
@@ -35,6 +35,7 @@ import { BarChart } from 'echarts/charts'
 import { TooltipComponent, GridComponent } from 'echarts/components'
 import type { AntibioticUsage } from '../composables/useDrugData'
 import { formatQty } from '../utils/ceDate'
+import { CHART_FONT, chartColors, baseTooltip, valueAxis, barGradient, escapeHtml } from '../utils/chartTheme'
 
 use([CanvasRenderer, BarChart, TooltipComponent, GridComponent])
 
@@ -69,45 +70,33 @@ const chartOption = computed(() => {
             containLabel: true,
         },
         tooltip: {
+            ...baseTooltip(),
             trigger: 'axis',
-            axisPointer: { type: 'shadow' },
-            backgroundColor: '#FFFFFF',
-            borderColor: 'rgba(78,110,47,0.4)',
-            borderWidth: 1,
-            textStyle: { color: '#4B3621', fontFamily: 'Tahoma' },
+            axisPointer: {
+                type: 'shadow',
+                shadowStyle: { color: 'rgba(78,110,47,0.06)' },
+            },
             formatter: (params: any[]) => {
                 const p = params[0]
                 if (!p) return ''
                 const item = items[p.dataIndex]
                 if (!item) return ''
                 return `
-          <div style="font-weight:600;margin-bottom:6px;">${item.drug_name}</div>
-          <div>${item.icode}</div>
-          <div style="margin-top:4px;">ปริมาณ: <b style="color:#4E6E2F">${formatQty(item.total_qty)}</b> ${item.units || 'หน่วย'}</div>
-          <div>จ่ายใน <b style="color:#FF8E7E">${item.visit_count.toLocaleString()}</b> ครั้ง</div>
+          <div style="font-weight:600;margin-bottom:5px;">${escapeHtml(item.drug_name)}</div>
+          <div style="color:${chartColors.textMuted};">${escapeHtml(item.icode)}</div>
+          <div style="margin-top:4px;">ปริมาณ: <b style="color:${chartColors.bar}">${formatQty(item.total_qty)}</b> ${escapeHtml(item.units || 'หน่วย')}</div>
+          <div>จ่ายใน <b style="color:${chartColors.barDeep}">${item.visit_count.toLocaleString()}</b> ครั้ง</div>
         `
             },
         },
-        xAxis: {
-            type: 'value',
-            splitLine: {
-                lineStyle: { color: 'rgba(78,110,47,0.08)', type: 'dashed' },
-            },
-            axisLabel: {
-                color: '#B09880',
-                fontFamily: 'Tahoma',
-                fontSize: 11,
-                formatter: (v: number) =>
-                    v >= 1000 ? (v / 1000).toFixed(1) + 'K' : v.toString(),
-            },
-        },
+        xAxis: valueAxis(),
         yAxis: {
             type: 'category',
             inverse: true,
             data: names,
             axisLabel: {
-                color: '#4B3621',
-                fontFamily: 'Tahoma',
+                color: chartColors.text,
+                fontFamily: CHART_FONT,
                 fontSize: 12,
             },
             axisLine: { show: false },
@@ -118,51 +107,31 @@ const chartOption = computed(() => {
                 name: 'ปริมาณ',
                 type: 'bar',
                 data: values,
-                barMaxWidth: 22,
+                barMaxWidth: 20,
                 itemStyle: {
                     borderRadius: [0, 8, 8, 0],
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 1,
-                        y2: 0,
-                        colorStops: [
-                            { offset: 0, color: 'rgba(78,110,47,0.35)' },
-                            { offset: 1, color: '#4E6E2F' },
-                        ],
-                    },
+                    color: barGradient(),
                 },
                 emphasis: {
                     itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0,
-                            y: 0,
-                            x2: 1,
-                            y2: 0,
-                            colorStops: [
-                                { offset: 0, color: '#7AAD52' },
-                                { offset: 1, color: '#3A5220' },
-                            ],
-                        },
+                        color: barGradient(chartColors.barBright, chartColors.barDeep),
                     },
                 },
                 label: {
                     show: true,
                     position: 'right',
                     distance: 6,
-                    color: '#7A6248',
-                    fontFamily: 'Tahoma',
+                    color: chartColors.textMuted,
+                    fontFamily: CHART_FONT,
                     fontSize: 11,
                     fontWeight: 'bold',
                     formatter: (p: any) => `${formatQty(p.value)} ${units[p.dataIndex] ?? ''}`,
                 },
-                animationDelay: (idx: number) => idx * 45,
+                animationDelay: (idx: number) => idx * 40,
             },
         ],
         animationEasing: 'cubicOut' as const,
-        animationDuration: 700,
+        animationDuration: 650,
     }
 })
 </script>
@@ -172,22 +141,23 @@ const chartOption = computed(() => {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 18px 22px 14px;
-    gap: 10px;
+    padding: var(--space-5) var(--space-6) var(--space-4);
+    gap: var(--space-3);
 }
 
 .chart-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-3);
     flex-shrink: 0;
 }
 
 .heading-left {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 15px;
+    gap: var(--space-2);
+    font-size: var(--text-lg);
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -197,7 +167,7 @@ const chartOption = computed(() => {
 }
 
 .heading-right {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     font-weight: 600;
 }
@@ -213,9 +183,9 @@ const chartOption = computed(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: var(--space-3);
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: var(--text-md);
 }
 
 .state-bloom {
@@ -223,7 +193,7 @@ const chartOption = computed(() => {
 }
 
 .state-sub {
-    font-size: 12.5px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 </style>
