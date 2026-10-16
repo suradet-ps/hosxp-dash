@@ -827,6 +827,12 @@ tbody tr:last-child td {
     width: 240px;
 }
 
+/* The plain `thead th` rule would otherwise left-align this header while
+   the numbers below are right-aligned. */
+thead th.col-qty {
+    text-align: right;
+}
+
 .qty-wrap {
     display: flex;
     align-items: center;
@@ -1117,6 +1123,18 @@ tbody tr:last-child td {
 
 .pr-table thead th:last-child {
     border-radius: 0 6px 0 0;
+}
+
+/* `thead th { text-align: left }` above has higher specificity than the
+   `.pr-col-*` rules, so the header alignment for the rank and numeric
+   columns must be set with matching specificity. */
+.pr-table thead th.pr-col-rank {
+    text-align: center;
+}
+
+.pr-table thead th.pr-col-qty,
+.pr-table thead th.pr-col-visit {
+    text-align: right;
 }
 
 .pr-table tbody td {
