@@ -224,8 +224,10 @@ async fn fetch_top_drugs_internal(
 
   // ── Step 1: totals only (single table scan, no correlated subquery) ──────
   // The INNER JOIN keeps this a drug ranking: services, labs, and other
-  // billed items in `opitemrece` have no `drugitems` row. `qty > 0` drops
-  // billing corrections and returns so the sums match real dispensing.
+  // billed items in `opitemrece` have no `drugitems` row. The icode pattern
+  // pins the standard HOSxP medication category (codes starting with 1),
+  // matching the AllerX reference query, and `qty > 0` drops billing
+  // corrections and returns so the sums match real dispensing.
   let total_rows = sqlx::query(
     r#"
         SELECT STRAIGHT_JOIN
@@ -235,6 +237,7 @@ async fn fetch_top_drugs_internal(
         FROM opitemrece o
         JOIN drugitems d ON d.icode = o.icode
         WHERE YEAR(o.vstdate) = ?
+          AND o.icode LIKE '1%'
           AND o.qty > 0
         GROUP BY o.icode, d.name
         ORDER BY total_qty DESC
