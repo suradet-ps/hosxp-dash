@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Please describe the problem before the solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What question do you have to answer today that the dashboard cannot answer yet?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Project constraints
+      options:
+        - label: This keeps HOSxP read-only (no INSERT / UPDATE / DELETE / DDL).
+          required: true
+        - label: This never exposes or logs database credentials.
+          required: true
+        - label: This keeps the app usable on an offline hospital machine (no public-internet dependencies).
+          required: true

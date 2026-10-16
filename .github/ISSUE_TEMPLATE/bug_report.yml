@@ -1,0 +1,109 @@
+name: Bug report
+description: Something is not working as it should
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make HOSxP Dash better. Please fill in the fields below.
+
+        The numbers on this dashboard feed pharmacy meetings - a wrong quantity,
+        a missing drug, or a wrong peak month is a data-integrity event, not a
+        cosmetic bug. If that is what you hit, say so up front (and attach the
+        report view where the number looked wrong).
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A short, clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect to ...
+        2. Select year / date range ...
+        3. Search drug ...
+        4. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: If a number is wrong, what should it be - and how do you know (e.g. the HOSxP report it should match)?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the error message shown in the app, if any.
+    validations:
+      required: true
+  - type: dropdown
+    id: view
+    attributes:
+      label: Report view
+      description: Which screen shows the problem?
+      options:
+        - Yearly overview
+        - Injectable antibiotics
+        - PDF export
+        - Connection / settings
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: year
+    attributes:
+      label: Year (Buddhist Era) or date range in use
+      description: If the bug is number-related, which period was selected?
+      placeholder: "e.g. 2569 (BE), or 2569-01-01 to 2569-10-16"
+    validations:
+      required: false
+  - type: input
+    id: icode
+    attributes:
+      label: Drug code (icode)
+      description: If the bug is about one drug, which icode was selected?
+      placeholder: "e.g. 1000123"
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: HOSxP Dash version
+      description: From the GitHub release or installer you used.
+      placeholder: "e.g. 0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: hosxp
+    attributes:
+      label: HOSxP / MariaDB version
+      description: If known - HOSxP schema drifts between sites and versions, and table/column naming differs.
+      placeholder: "e.g. HOSxP XE 4.x, MariaDB 10.5"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or extra context
+      description: Paste relevant logs or the error text. Never paste the database password or connection strings - settings are stored encrypted on your machine and must stay there.
+      render: text
+    validations:
+      required: false

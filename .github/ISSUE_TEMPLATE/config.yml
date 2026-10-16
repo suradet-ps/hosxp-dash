@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contribution guide
+    url: https://github.com/suradet-ps/hosxp-dash/blob/main/CONTRIBUTING.md
+    about: Open an issue first, keep changes scoped, and how to send a pull request
+  - name: README
+    url: https://github.com/suradet-ps/hosxp-dash/blob/main/README.md
+    about: Setup (Bun, Rust, Tauri), connecting to HOSxP, and what each dashboard shows
