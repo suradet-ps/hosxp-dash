@@ -11,6 +11,7 @@ use commands::{
   connect_db, get_antibiotic_usage, get_available_years, get_dashboard_data, get_drug_list,
   get_drug_monthly_qty, get_top_drugs, load_config, save_db_config, save_pdf_file,
 };
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -21,6 +22,23 @@ pub fn run() {
 
   tauri::Builder::default()
     .plugin(tauri_plugin_shell::init())
+    .setup(|app| {
+      // Open sized to the primary monitor — the 1440×900 config default
+      // overflows smaller laptop screens — and centered before showing, so
+      // the window never flashes at the old size or an off-center position.
+      if let Some(window) = app.get_webview_window("main") {
+        if let Ok(Some(monitor)) = window.primary_monitor() {
+          let scale = monitor.scale_factor();
+          let area = monitor.size().to_logical::<f64>(scale);
+          let width = (area.width - 96.0).clamp(1024.0, 1440.0);
+          let height = (area.height - 96.0).clamp(660.0, 900.0);
+          let _ = window.set_size(tauri::LogicalSize::new(width, height));
+        }
+        let _ = window.center();
+        let _ = window.show();
+      }
+      Ok(())
+    })
     .invoke_handler(tauri::generate_handler![
       connect_db,
       get_antibiotic_usage,
