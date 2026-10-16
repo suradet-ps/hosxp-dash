@@ -2,7 +2,7 @@
 name = "hosxp-dash"
 version = "0.1.0"
 edition = "2024"
-description = "HOSxp Dash — Tauri backend (MySQL queries, caching, IPC commands)"
+description = "HOSxP Dash — Tauri backend (MySQL queries, caching, IPC commands)"
 
 [lib]
 name = "hosxp_dash_lib"

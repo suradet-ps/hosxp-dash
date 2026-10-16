@@ -5,7 +5,7 @@
         <div class="header-brand">
             <img class="brand-icon" :src="logoUrl" alt="" />
             <div class="brand-text">
-                <span class="brand-title">HOSxp Dash</span>
+                <span class="brand-title">HOSxP Dash</span>
                 <span class="brand-sub">โรงพยาบาลสระโบสถ์</span>
             </div>
         </div>

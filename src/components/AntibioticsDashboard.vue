@@ -153,7 +153,7 @@
                 <img :src="logoUrl" class="pr-logo" alt="">
                 <div class="pr-band-text">
                     <div class="pr-hospital">โรงพยาบาลสระโบสถ์</div>
-                    <div class="pr-app">HOSxp Dash · ระบบติดตามการใช้ยา</div>
+                    <div class="pr-app">HOSxP Dash · ระบบติดตามการใช้ยา</div>
                 </div>
                 <div class="pr-printed">{{ printedAtLabel }}</div>
             </div>
@@ -216,7 +216,7 @@
             </table>
 
             <div class="pr-foot">
-                เอกสารสร้างจากฐานข้อมูล HOSxP · จัดทำโดย HOSxp Dash · ใช้สำหรับงานเภสัชกรรมภายในโรงพยาบาล
+                เอกสารสร้างจากฐานข้อมูล HOSxP · จัดทำโดย HOSxP Dash · ใช้สำหรับงานเภสัชกรรมภายในโรงพยาบาล
             </div>
         </div>
     </div>

@@ -1,4 +1,4 @@
-# HOSxp Dash
+# HOSxP Dash
 
 [![Release](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml/badge.svg)](https://github.com/suradet-ps/hosxp-dash/actions/workflows/windows-release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -13,7 +13,7 @@
 ## ◆ PULSE
 
 The numbers live in HOSxP; the question lives in the meeting room.
-HOSxp Dash connects directly to the hospital's MySQL database, read-only,
+HOSxP Dash connects directly to the hospital's MySQL database, read-only,
 and turns `opitemrece` into the picture a pharmacy meeting needs: the
 year's drug usage, the top products, and one drug's monthly trend with
 its peak month called out. No export, no spreadsheet archaeology - the
