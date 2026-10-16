@@ -223,6 +223,9 @@ async fn fetch_top_drugs_internal(
   }
 
   // ── Step 1: totals only (single table scan, no correlated subquery) ──────
+  // The INNER JOIN keeps this a drug ranking: services, labs, and other
+  // billed items in `opitemrece` have no `drugitems` row. `qty > 0` drops
+  // billing corrections and returns so the sums match real dispensing.
   let total_rows = sqlx::query(
     r#"
         SELECT STRAIGHT_JOIN
@@ -230,8 +233,9 @@ async fn fetch_top_drugs_internal(
             COALESCE(d.name, o.icode)         AS drug_name,
             CAST(SUM(o.qty) AS DOUBLE)        AS total_qty
         FROM opitemrece o
-        LEFT JOIN drugitems d ON d.icode = o.icode
+        JOIN drugitems d ON d.icode = o.icode
         WHERE YEAR(o.vstdate) = ?
+          AND o.qty > 0
         GROUP BY o.icode, d.name
         ORDER BY total_qty DESC
         LIMIT ?
@@ -261,6 +265,7 @@ async fn fetch_top_drugs_internal(
             CAST(SUM(o.qty) AS DOUBLE)   AS qty
         FROM opitemrece o
         WHERE YEAR(o.vstdate) = ?
+          AND o.qty > 0
           AND o.icode IN ({})
         GROUP BY o.icode, MONTH(o.vstdate)
         "#,
@@ -351,6 +356,7 @@ async fn fetch_antibiotic_usage_internal(
         JOIN drugitems d ON d.icode = o.icode
         WHERE o.vstdate >= ?
           AND o.vstdate <= ?
+          AND o.qty > 0
           AND d.dosageform IN ('INJECTIONS', 'Injection')
           AND d.drugcategory = 'ANTIBIOTICS'
         GROUP BY o.icode, d.name, d.units
@@ -451,8 +457,9 @@ pub async fn get_drug_monthly_qty(
                             MONTH(o.vstdate)             AS month,
                             CAST(SUM(o.qty) AS DOUBLE)   AS total_qty
                         FROM opitemrece o
-                        LEFT JOIN drugitems d ON d.icode = o.icode
+                        JOIN drugitems d ON d.icode = o.icode
                         WHERE YEAR(o.vstdate) = ?
+                          AND o.qty > 0
                           AND o.icode = ?
                         GROUP BY o.icode, d.name, MONTH(o.vstdate)
                         ORDER BY month
@@ -472,8 +479,9 @@ pub async fn get_drug_monthly_qty(
                             MONTH(o.vstdate)             AS month,
                             CAST(SUM(o.qty) AS DOUBLE)   AS total_qty
                         FROM opitemrece o
-                        LEFT JOIN drugitems d ON d.icode = o.icode
+                        JOIN drugitems d ON d.icode = o.icode
                         WHERE YEAR(o.vstdate) = ?
+                          AND o.qty > 0
                         GROUP BY o.icode, d.name, MONTH(o.vstdate)
                         ORDER BY o.icode, month
                         "#,
