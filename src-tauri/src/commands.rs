@@ -543,6 +543,44 @@ pub async fn get_antibiotic_usage(
   .await
 }
 
+/// Save a generated PDF report to the user's Downloads folder (falling back
+/// to Desktop, then Home) and return the absolute path written.
+///
+/// `file_name` is sanitized to a safe ASCII subset ending in `.pdf`, so a
+/// crafted name can never escape the target directory.
+#[tauri::command]
+pub async fn save_pdf_file(file_name: String, base64_data: String) -> Result<String, String> {
+  use base64::Engine as _;
+
+  let safe_name: String = file_name
+    .chars()
+    .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+    .collect();
+
+  if safe_name.starts_with('.')
+    || !safe_name.to_ascii_lowercase().ends_with(".pdf")
+    || safe_name.len() <= ".pdf".len()
+  {
+    return Err(format!("invalid report file name: {file_name}"));
+  }
+
+  let bytes = base64::engine::general_purpose::STANDARD
+    .decode(base64_data.as_bytes())
+    .map_err(|e| format!("invalid PDF payload: {e}"))?;
+
+  let dir = dirs::download_dir()
+    .or_else(dirs::desktop_dir)
+    .or_else(dirs::home_dir)
+    .ok_or_else(|| "no writable directory found for the report".to_string())?;
+
+  let path = dir.join(&safe_name);
+  tokio::fs::write(&path, bytes)
+    .await
+    .map_err(|e| format!("failed to write report: {e}"))?;
+
+  Ok(path.to_string_lossy().into_owned())
+}
+
 /// Convenience wrapper around `fetch_top_drugs_internal` for callers that
 /// want top drugs without the full `DashboardBundle`.
 #[tauri::command]

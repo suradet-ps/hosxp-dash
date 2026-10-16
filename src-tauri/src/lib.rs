@@ -9,7 +9,7 @@ mod db;
 
 use commands::{
   connect_db, get_antibiotic_usage, get_available_years, get_dashboard_data, get_drug_list,
-  get_drug_monthly_qty, get_top_drugs, load_config, save_db_config,
+  get_drug_monthly_qty, get_top_drugs, load_config, save_db_config, save_pdf_file,
 };
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -31,6 +31,7 @@ pub fn run() {
       get_drug_list,
       load_config,
       save_db_config,
+      save_pdf_file,
     ])
     .run(tauri::generate_context!())
     .expect("invariant: tauri context is generated at compile time and is always valid");
