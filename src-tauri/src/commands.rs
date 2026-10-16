@@ -111,7 +111,8 @@ pub struct AntibioticUsage {
   /// Dispensing unit from `drugitems.units` (empty when the source row has none).
   pub units: String,
   pub total_qty: f64,
-  /// Distinct visits (`opitemrece.vn`) the drug was dispensed in.
+  /// Distinct dispensing encounters: OPD visits (`opitemrece.vn`) plus IPD
+  /// admissions (`opitemrece.an`, which HOSxP sets instead of `vn`).
   pub visit_count: u64,
 }
 
@@ -342,7 +343,10 @@ async fn fetch_antibiotic_usage_internal(
             COALESCE(d.name, o.icode)      AS drug_name,
             COALESCE(d.units, '')          AS units,
             CAST(SUM(o.qty) AS DOUBLE)     AS total_qty,
-            COUNT(DISTINCT o.vn)           AS visit_count
+            COUNT(DISTINCT CASE
+                WHEN NULLIF(o.vn, '') IS NOT NULL THEN CONCAT('V:', o.vn)
+                WHEN NULLIF(o.an, '') IS NOT NULL THEN CONCAT('A:', o.an)
+            END)                           AS visit_count
         FROM opitemrece o
         JOIN drugitems d ON d.icode = o.icode
         WHERE o.vstdate >= ?
