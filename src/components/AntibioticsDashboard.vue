@@ -1183,7 +1183,7 @@ thead th.col-qty {
 }
 
 .pr-col-unit {
-    width: 80px;
+    width: 130px;
     font-size: 12px;
     color: #7A6248;
 }
