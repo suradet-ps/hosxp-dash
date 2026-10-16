@@ -19,7 +19,7 @@ serde_json = "1"                                      # JSON encode/decode (Taur
 sqlx = { version = "0.9", features = ["mysql", "runtime-tokio", "chrono"] } # async MySQL driver
 chrono = "0.4"                                        # date parsing/validation for range queries (sqlx uses it too)
 tokio = { version = "1", features = ["full"] }        # async runtime
-encryptman = "0.4"                                     # AES-256-GCM encryption for config
+encryptman = "0.5"                                     # AES-256-GCM encryption for config
 encryptman-keyring = "0.1"                              # OS keychain-backed master key storage
 dirs = "7"                                              # platform-specific app data directory
 base64 = "0.22"                                       # decodes PDF payloads sent over IPC
