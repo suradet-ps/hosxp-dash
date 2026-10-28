@@ -17,7 +17,7 @@ fn get_pool_lock() -> &'static RwLock<Option<MySqlPool>> {
   POOL.get_or_init(|| RwLock::new(None))
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 /// MySQL connection parameters supplied by the frontend on first connect.
 pub struct DbConfig {
   pub host: String,
@@ -79,6 +79,14 @@ fn urlencoding_simple(s: &str) -> String {
     }
   }
   out
+}
+
+/// Whether a connection pool has been initialised.
+///
+/// Used by the login command to return a Thai "configure the connection
+/// first" message instead of the generic pool error.
+pub async fn is_connected() -> bool {
+  get_pool_lock().read().await.is_some()
 }
 
 /// Acquire a read-lock on the pool, then call `f` with a reference to it.
