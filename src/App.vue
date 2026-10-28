@@ -1,5 +1,7 @@
 <template>
-<div class="app-shell">
+<LoginScreen v-if="!authStore.session" @open-settings="showSettings = true" />
+
+<div v-else class="app-shell">
     <!-- Header -->
     <header class="app-header">
         <div class="header-brand">
@@ -37,6 +39,17 @@
                 @click="showSettings = true">
                 <Settings :size="17" :stroke-width="2" aria-hidden="true" />
             </button>
+
+            <div v-if="authStore.session" class="user-chip"
+                :title="`${authStore.session.displayName} · ${authStore.session.loginName}`">
+                <span class="user-avatar" aria-hidden="true">{{ authStore.initials }}</span>
+                <span class="user-name">{{ authStore.session.displayName }}</span>
+            </div>
+            <button type="button" class="logout-btn" title="ออกจากระบบ" aria-label="ออกจากระบบ"
+                @click="handleLogout">
+                <LogOut :size="15" :stroke-width="2.2" aria-hidden="true" />
+                <span class="logout-label">ออกจากระบบ</span>
+            </button>
         </div>
     </header>
 
@@ -72,17 +85,29 @@
         </button>
     </div>
 
-    <!-- Connection Settings Modal -->
-    <ConnectionSettings :show="showSettings" @close="showSettings = false" />
 </div>
+
+<!-- Connection Settings Modal (also reachable from the login gate) -->
+<ConnectionSettings :show="showSettings" @close="showSettings = false" />
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import { Wifi, WifiOff, Settings, TriangleAlert, X, ChartColumnBig, Syringe } from 'lucide-vue-next'
+import {
+    Wifi,
+    WifiOff,
+    Settings,
+    TriangleAlert,
+    X,
+    ChartColumnBig,
+    Syringe,
+    LogOut,
+} from 'lucide-vue-next'
+import { useAuthStore } from './stores/auth'
 import { useDbConfigStore } from './stores/dbConfig'
 import { useDashboardStore } from './stores/dashboard'
 import { useDrugData } from './composables/useDrugData'
+import LoginScreen from './components/LoginScreen.vue'
 import ConnectionSettings from './components/ConnectionSettings.vue'
 import YearSelector from './components/YearSelector.vue'
 import DrugSearchBar from './components/DrugSearchBar.vue'
@@ -92,6 +117,7 @@ import DrugTrendChart from './components/DrugTrendChart.vue'
 import AntibioticsDashboard from './components/AntibioticsDashboard.vue'
 import logoUrl from './assets/logo.svg'
 
+const authStore = useAuthStore()
 const dbStore = useDbConfigStore()
 const dashStore = useDashboardStore()
 const { fetchDashboardData, fetchDrugMonthly } = useDrugData()
@@ -100,7 +126,7 @@ const showSettings = ref(false)
 const view = ref<'overview' | 'antibiotics'>('overview')
 
 async function loadDashboard() {
-    if (!dbStore.connected) return
+    if (!dbStore.connected || !authStore.session) return
     dashStore.loading = true
     dashStore.error = null
     try {
@@ -124,7 +150,7 @@ async function loadDashboard() {
 }
 
 async function loadDrugChart() {
-    if (!dbStore.connected || !dashStore.selectedIcode) return
+    if (!dbStore.connected || !authStore.session || !dashStore.selectedIcode) return
     dashStore.loading = true
     try {
         const data = await fetchDrugMonthly(dashStore.selectedYear, dashStore.selectedIcode)
@@ -153,26 +179,39 @@ watch(
     }
 )
 
-// Watch connection state → trigger initial data load
+// Watch connection state → reload after a reconnect that kept the session
 watch(
     () => dbStore.connected,
     async (connected) => {
-        if (connected) {
+        if (connected && authStore.session) {
             await loadDashboard()
             if (dashStore.selectedIcode) await loadDrugChart()
         }
     }
 )
 
-onMounted(async () => {
-    await dbStore.initFromDisk()
-    if (dbStore.connected) {
+// Watch the session → load the dashboard right after a successful login
+watch(
+    () => authStore.session,
+    async (session) => {
+        if (!session) return
         await loadDashboard()
         if (dashStore.selectedIcode) await loadDrugChart()
-    } else {
-        // Show settings modal on first launch if not connected
-        showSettings.value = true
     }
+)
+
+async function handleLogout() {
+    await authStore.logout()
+    dashStore.topDrugs = []
+    dashStore.currentChartData = null
+    dashStore.selectedIcode = null
+    dashStore.error = null
+    showSettings.value = false
+}
+
+onMounted(async () => {
+    await dbStore.initFromDisk()
+    await authStore.restoreSession()
 })
 </script>
 
@@ -362,6 +401,73 @@ onMounted(async () => {
     background: #e8e8dd;
 }
 
+/* ── Signed-in officer ── */
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 190px;
+    min-height: 32px;
+    padding: 3px 11px 3px 3px;
+    background: var(--bg-inset);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+}
+
+.user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--basil-400), var(--basil-500));
+    color: #ffffff;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+        border-color var(--dur) var(--ease);
+}
+
+.logout-btn:hover {
+    background: rgba(192, 57, 43, 0.07);
+    border-color: rgba(192, 57, 43, 0.22);
+    color: var(--chili-500);
+}
+
+.logout-btn:active {
+    transform: translateY(1px);
+}
+
 /* ── Main layout ── */
 .app-main {
     display: flex;
@@ -460,9 +566,27 @@ onMounted(async () => {
     background: rgba(192, 57, 43, 0.1);
 }
 
+@media (max-width: 1320px) {
+    .user-name {
+        display: none;
+    }
+
+    .user-chip {
+        padding-right: 3px;
+    }
+}
+
 @media (max-width: 1180px) {
     .brand-sub {
         display: none;
+    }
+
+    .logout-label {
+        display: none;
+    }
+
+    .logout-btn {
+        padding: 7px;
     }
 
     .overview-grid {

@@ -98,11 +98,13 @@ import {
     EyeOff,
     TriangleAlert,
 } from 'lucide-vue-next'
+import { useAuthStore } from '../stores/auth'
 import { useDbConfigStore } from '../stores/dbConfig'
 
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
+const authStore = useAuthStore()
 const dbStore = useDbConfigStore()
 const successMsg = ref('')
 const showPassword = ref(false)
@@ -162,6 +164,9 @@ async function handleConnect() {
     successMsg.value = ''
     try {
         await dbStore.connect({ ...form })
+        // A changed connection clears the backend session; mirror that so the
+        // login gate returns instead of leaving stale dashboard access.
+        await authStore.restoreSession()
         successMsg.value = 'เชื่อมต่อสำเร็จ'
         // The dashboard loads behind the dialog — step out of the way.
         autoCloseTimer = setTimeout(() => emit('close'), 900)
