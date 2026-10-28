@@ -263,35 +263,22 @@ mod tests {
   use super::*;
 
   #[test]
-  fn md5_hex_matches_known_digests() {
-    assert_eq!(md5_hex("password"), "5f4dcc3b5aa765d61d8327deb882cf99");
-    assert_eq!(md5_hex("123456"), "e10adc3949ba59abbe56e057f20f883e");
+  fn md5_hex_matches_the_rfc_1321_vector() {
+    assert_eq!(md5_hex("abc"), "900150983cd24fb0d6963f7d28e17f72");
   }
 
   #[test]
   fn verify_accepts_lower_and_upper_hex() {
-    assert!(verify_password(
-      "password",
-      "5f4dcc3b5aa765d61d8327deb882cf99"
-    ));
-    assert!(verify_password(
-      "password",
-      "5F4DCC3B5AA765D61D8327DEB882CF99"
-    ));
+    assert!(verify_password("abc", "900150983cd24fb0d6963f7d28e17f72"));
+    assert!(verify_password("abc", "900150983CD24FB0D6963F7D28E17F72"));
   }
 
   #[test]
   fn verify_rejects_wrong_or_malformed_hashes() {
-    assert!(!verify_password(
-      "wrong",
-      "5f4dcc3b5aa765d61d8327deb882cf99"
-    ));
-    assert!(!verify_password("password", ""));
-    assert!(!verify_password("password", "not-a-md5"));
-    assert!(!verify_password(
-      "password",
-      "5f4dcc3b5aa765d61d8327deb882cf9z"
-    ));
+    assert!(!verify_password("abcd", "900150983cd24fb0d6963f7d28e17f72"));
+    assert!(!verify_password("abc", ""));
+    assert!(!verify_password("abc", "not-a-md5"));
+    assert!(!verify_password("abc", "900150983cd24fb0d6963f7d28e17f7z"));
   }
 
   #[test]
@@ -310,7 +297,7 @@ mod tests {
     let account = OfficerAccount {
       officer_id: 1,
       login_name: "pharm".into(),
-      password_md5: "5f4dcc3b5aa765d61d8327deb882cf99".into(),
+      password_md5: "test-digest".into(),
       active: "Y".into(),
       auth_type_id: 1,
       doctor_code: None,
@@ -318,6 +305,6 @@ mod tests {
     };
     let debug = format!("{account:?}");
     assert!(debug.contains("<redacted>"));
-    assert!(!debug.contains("5f4dcc3b5aa765d61d8327deb882cf99"));
+    assert!(!debug.contains("test-digest"));
   }
 }
