@@ -1,0 +1,11 @@
+version: 2
+
+secret:
+  ignored_matches:
+    # Standard MD5 test vector for "password" used by the auth unit tests
+    # before the switch to RFC 1321 vectors. Not a credential.
+    - name: Historical MD5 login test vector
+      match: 5f4dcc3b5aa765d61d8327deb882cf99
+    # RFC 1321 test vector MD5("abc"), used by the auth unit tests.
+    - name: RFC 1321 MD5 test vector
+      match: 900150983cd24fb0d6963f7d28e17f72
