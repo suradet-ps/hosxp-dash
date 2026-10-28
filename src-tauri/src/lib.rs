@@ -1,12 +1,14 @@
 //! Tauri application entry-point.
 //!
 //! Wires up the plugin stack, registers IPC command handlers, and delegates
-//! all business logic to the `commands` and `db` modules.
+//! all business logic to the `auth`, `commands`, and `db` modules.
 
+mod auth;
 mod commands;
 mod config;
 mod db;
 
+use auth::{current_session, login, logout};
 use commands::{
   connect_db, get_antibiotic_usage, get_available_years, get_dashboard_data, get_drug_list,
   get_drug_monthly_qty, get_top_drugs, load_config, save_db_config, save_pdf_file,
@@ -41,6 +43,7 @@ pub fn run() {
     })
     .invoke_handler(tauri::generate_handler![
       connect_db,
+      current_session,
       get_antibiotic_usage,
       get_dashboard_data,
       get_drug_monthly_qty,
@@ -48,6 +51,8 @@ pub fn run() {
       get_available_years,
       get_drug_list,
       load_config,
+      login,
+      logout,
       save_db_config,
       save_pdf_file,
     ])
