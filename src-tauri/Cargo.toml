@@ -23,3 +23,5 @@ encryptman = "0.5"                                     # AES-256-GCM encryption 
 encryptman-keyring = "0.1"                              # OS keychain-backed master key storage
 dirs = "7"                                              # platform-specific app data directory
 base64 = "0.22"                                       # decodes PDF payloads sent over IPC
+md-5 = "0.10"                                         # verifies HOSxP officer MD5 passwords
+secrecy = "0.10"                                      # zeroizes and redacts the login password
