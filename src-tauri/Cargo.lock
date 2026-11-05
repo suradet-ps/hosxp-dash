@@ -1793,7 +1793,7 @@ dependencies = [
 name = "hosxp-dash"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "dirs",
  "encryptman 0.5.0",
