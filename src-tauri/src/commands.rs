@@ -4,6 +4,7 @@
 //! frontend `invoke()` call.  Heavy query results are cached in process-wide
 //! `LazyLock<RwLock<HashMap>>` statics with a 5-minute TTL.
 
+use crate::auth;
 use crate::config;
 use crate::db::{DbConfig, init_pool, with_pool};
 use chrono::NaiveDate;
@@ -395,10 +396,21 @@ async fn fetch_antibiotic_usage_internal(
 // ── Tauri commands ─────────────────────────────────────────────────────────────
 /// Initialise (or replace) the global MySQL connection pool, then wipe all
 /// query caches so stale data from the previous session is never served.
+///
+/// A changed connection also clears the officer session: after pointing the
+/// app at another database the operator must sign in again (`docs/auth.md`).
 #[tauri::command]
 pub async fn connect_db(config: DbConfig) -> Result<(), String> {
+  let connection_changed = config::load_config()
+    .ok()
+    .flatten()
+    .is_none_or(|saved| saved != config);
+
   init_pool(config).await?;
   invalidate_all_caches().await;
+  if connection_changed {
+    auth::clear_session().await;
+  }
   Ok(())
 }
 
@@ -412,6 +424,7 @@ pub async fn connect_db(config: DbConfig) -> Result<(), String> {
 /// two separate `invoke()` calls, halving the IPC round-trip overhead.
 #[tauri::command]
 pub async fn get_dashboard_data(year: i32, top_limit: u8) -> Result<DashboardBundle, String> {
+  auth::require_session().await?;
   with_pool(move |pool| {
     Box::pin(async move {
       // Both queries share the same pool reference concurrently.
@@ -438,6 +451,7 @@ pub async fn get_drug_monthly_qty(
   year: i32,
   icode: Option<String>,
 ) -> Result<Vec<DrugMonthlyData>, String> {
+  auth::require_session().await?;
   let cache_key = match &icode {
     Some(ic) => format!("monthly_{}_drug_{}", year, ic),
     None => format!("monthly_{}_<all>", year),
@@ -541,6 +555,7 @@ pub async fn get_antibiotic_usage(
   start_date: String,
   end_date: String,
 ) -> Result<Vec<AntibioticUsage>, String> {
+  auth::require_session().await?;
   let start = NaiveDate::parse_from_str(&start_date, "%Y-%m-%d")
     .map_err(|_| format!("start_date must be YYYY-MM-DD, got: {start_date}"))?;
   let end = NaiveDate::parse_from_str(&end_date, "%Y-%m-%d")
@@ -565,6 +580,8 @@ pub async fn get_antibiotic_usage(
 /// crafted name can never escape the target directory.
 #[tauri::command]
 pub async fn save_pdf_file(file_name: String, base64_data: String) -> Result<String, String> {
+  auth::require_session().await?;
+
   use base64::Engine as _;
 
   let safe_name: String = file_name
@@ -600,6 +617,7 @@ pub async fn save_pdf_file(file_name: String, base64_data: String) -> Result<Str
 /// want top drugs without the full `DashboardBundle`.
 #[tauri::command]
 pub async fn get_top_drugs(year: i32, limit: u8) -> Result<Vec<DrugSummary>, String> {
+  auth::require_session().await?;
   with_pool(move |pool| Box::pin(async move { fetch_top_drugs_internal(pool, year, limit).await }))
     .await
 }
@@ -607,6 +625,7 @@ pub async fn get_top_drugs(year: i32, limit: u8) -> Result<Vec<DrugSummary>, Str
 /// Return all distinct years present in `opitemrece.vstdate`, newest first.
 #[tauri::command]
 pub async fn get_available_years() -> Result<Vec<i32>, String> {
+  auth::require_session().await?;
   with_pool(|pool| Box::pin(async move { fetch_years_internal(pool).await })).await
 }
 
@@ -615,6 +634,7 @@ pub async fn get_available_years() -> Result<Vec<i32>, String> {
 /// Results are NOT cached because the dataset is small and the query is fast.
 #[tauri::command]
 pub async fn get_drug_list(search: String) -> Result<Vec<DrugItem>, String> {
+  auth::require_session().await?;
   let escaped = search
     .replace('\\', "\\\\")
     .replace('%', "\\%")

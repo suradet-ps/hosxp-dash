@@ -61,6 +61,9 @@ The release artifact: `⟫ bun run tauri build` - output lands in
 
 One connection, one table, several honest charts.
 
+- **Signs in** - the login gate verifies the operator's HOSxP `officer`
+  username and password in the Rust backend and keeps the session in memory;
+  the password hash never reaches the webview and nothing is written back.
 - **Connects** - the settings dialog takes host, port, database, and
   credentials; the Rust backend holds the pool and asks the questions
   directly - no intermediate service, no export pipeline.
@@ -82,7 +85,9 @@ One connection, one table, several honest charts.
 
 **The core ceremony** - the pharmacy meeting prep:
 
-1. Open the app, connect to HOSxP. One configuration, remembered.
+1. Open the app and sign in with the HOSxP officer account. If no
+   connection is configured yet, set it up from the login gate - one
+   configuration, remembered.
 2. Pick the year. The dashboard answers: KPIs, top drugs, and the
    usage shape of the year.
 3. Search a drug of interest; its monthly trend renders with the peak
